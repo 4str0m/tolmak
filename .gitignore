@@ -1,0 +1,14 @@
+*.exe
+*.lib
+*.cmake
+.DS_Store
+ext_build
+build
+CMakeCache.txt
+CMakeFiles
+.ninja_deps
+.ninja_log
+build.ninja
+rules.ninja
+Makefile
+.vscode/
