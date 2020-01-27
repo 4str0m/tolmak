@@ -53,6 +53,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/glfw"  "ext_build/glfw")
 
 include_directories(ext/glfw/include)
 include_directories(ext/glad/include)
+include_directories(ext/imgui)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/glm"  "ext_build/glm")
 include_directories(ext/glm)
@@ -88,10 +89,20 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "
   endif()
 endif()
 
+file(GLOB imgui_SRC
+    "ext/imgui/*.h"
+    "ext/imgui/*.cpp"
+    "ext/imgui/examples/imgui_impl_glfw.h"
+    "ext/imgui/examples/imgui_impl_glfw.cpp"
+    "ext/imgui/examples/imgui_impl_opengl3.h"
+    "ext/imgui/examples/imgui_impl_opengl3.cpp"
+)
+
 add_executable(tolmak
   src/main.cpp
 
   ext/glad/src/glad.c
+  ${imgui_SRC}
 )
 
 target_link_libraries(tolmak glfw)
