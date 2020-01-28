@@ -89,17 +89,22 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "
   endif()
 endif()
 
+include_directories(include)
 file(GLOB imgui_SRC
-    "ext/imgui/*.h"
-    "ext/imgui/*.cpp"
-    "ext/imgui/examples/imgui_impl_glfw.h"
-    "ext/imgui/examples/imgui_impl_glfw.cpp"
-    "ext/imgui/examples/imgui_impl_opengl3.h"
-    "ext/imgui/examples/imgui_impl_opengl3.cpp"
+    ext/imgui/*.h
+    ext/imgui/*.cpp
+    ext/imgui/examples/imgui_impl_glfw.h
+    ext/imgui/examples/imgui_impl_glfw.cpp
+    ext/imgui/examples/imgui_impl_opengl3.h
+    ext/imgui/examples/imgui_impl_opengl3.cpp
 )
 
 add_executable(tolmak
   src/main.cpp
+
+  src/mesh_io.cpp include/mesh_io.h
+  src/shader.cpp include/shader.h
+  include/common.h
 
   ext/glad/src/glad.c
   ${imgui_SRC}
