@@ -2,7 +2,7 @@
 
 #include <common.h>
 
-struct Mesh
+struct MeshData
 {
     struct Vertex
     {
@@ -15,4 +15,4 @@ struct Mesh
     std::vector<uint32_t> indices;
 };
 
-void load_obj(const char *filename, Mesh& mesh);
+void load_obj(const char *filename, MeshData& mesh);

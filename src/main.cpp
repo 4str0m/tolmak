@@ -6,12 +6,24 @@
 #include <examples/imgui_impl_opengl3.h>
 
 #include <common.h>
+#include <orbit_camera.h>
 #include <mesh_io.h>
+#include <mesh.h>
 #include <shader.h>
+#include <texture.h>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
- 
+
+OrbitCamera camera = {
+	glm::vec3(0.f,  0.f, 0.f),
+	0.f, 0.f,
+	10.f,
+	glm::radians(45.f),
+	1.f,
+	0.1f, 100.f
+};
+
+static MouseState mouse_state;
+
 static void error_callback(int error, const char* description)
 {
     fprintf(stderr, "Error: %s\n", description);
@@ -22,7 +34,28 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
 }
- 
+
+static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
+{
+	mouse_state.dx = xpos - mouse_state.x;
+	mouse_state.dy = ypos - mouse_state.y;
+
+	mouse_state.x = xpos;
+	mouse_state.y = ypos;
+	
+	camera_handle_mouse_move(camera, mouse_state);
+}
+
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
+{
+	mouse_state.buttons[button] = action == GLFW_PRESS;
+}
+
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+	camera_handle_scroll(camera, xoffset, yoffset);
+}
+
 int main(void)
 {
     GLFWwindow* window;
@@ -30,14 +63,14 @@ int main(void)
     glfwSetErrorCallback(error_callback);
  
     if (!glfwInit()) {
-    	exit(EXIT_FAILURE);
+        exit(EXIT_FAILURE);
     }
-	
-	const char* glsl_version = "#version 130";
+    
+    const char* glsl_version = "#version 460";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
  
-    window = glfwCreateWindow(640, 480, "Simple example", NULL, NULL);
+    window = glfwCreateWindow(2000, 1200, "Simple example", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -45,15 +78,17 @@ int main(void)
     }
  
     glfwSetKeyCallback(window, key_callback);
+    glfwSetCursorPosCallback(window, cursor_position_callback);
+    glfwSetMouseButtonCallback(window, mouse_button_callback);
+    glfwSetScrollCallback(window, scroll_callback);
  
     glfwMakeContextCurrent(window);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-	{
-    	std::cout << "Failed to initialize GLAD" << std::endl;
-    	return -1;
-	}
+    {
+        std::cout << "Failed to initialize GLAD" << std::endl;
+        return -1;
+    }
     glfwSwapInterval(1);
-
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
@@ -66,74 +101,40 @@ int main(void)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
  
-    // NOTE: OpenGL error checks have been omitted for brevity
+    GLCall(glEnable(GL_DEPTH_TEST));
 
-	Mesh cube;
-	load_obj("../resources/meshes/cube.obj", cube);
+    Texture siggraph_tex;
+    load_texture("../resources/siggraph.png", siggraph_tex);
 
+    MeshData mesh_data;
+    load_obj("../resources/meshes/monkey.obj", mesh_data);
 
-	unsigned int texture;
-	GLCall(glGenTextures(1, &texture));
-	GLCall(glBindTexture(GL_TEXTURE_2D, texture));
-	// set the texture wrapping/filtering options (on the currently bound texture object)
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
-	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-	// load and generate the texture
-	int width, height, nrChannels;
-	unsigned char *data = stbi_load("../resources/siggraph.png", &width, &height, &nrChannels, 0);
-	if (data)
-	{
-	    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data));
-	    GLCall(glGenerateMipmap(GL_TEXTURE_2D));
-	}
-	else
-	{
-	    std::cout << "Failed to load texture" << std::endl;
-	}
-	stbi_image_free(data);
+    Mesh mesh;
+    mesh_from_mesh_data(mesh_data, mesh);
 
-
-	GLuint VAO, VBO, EBO;
-
-	GLCall(glEnable(GL_DEPTH_TEST));
-
-	GLCall(glGenVertexArrays(1, &VAO));
-    GLCall(glGenBuffers(1, &VBO));
-	GLCall(glBindVertexArray(VAO));
-    GLCall(glBindBuffer(GL_ARRAY_BUFFER, VBO));
-    GLCall(glBufferData(GL_ARRAY_BUFFER, cube.vertices.size() * sizeof(Mesh::Vertex), cube.vertices.data(), GL_STATIC_DRAW));
-
-	GLCall(glGenBuffers(1, &EBO));
-	GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
-	GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, cube.indices.size() * sizeof(uint32_t), cube.indices.data(), GL_STATIC_DRAW));
- 
     GLuint program = load_shader("../resources/shaders/phong.glsl");
  
-    GLint mvp_location, m_location, vpos_location, vuv_location, vn_location;
-    mvp_location 	= glGetUniformLocation(program, "MVP");
-    m_location 		= glGetUniformLocation(program, "M");
-    vpos_location 	= glGetAttribLocation(program, "vPos");
-    vuv_location 	= glGetAttribLocation(program, "vUV");
-    vn_location 	= glGetAttribLocation(program, "vN");
+    GLint mvp_location, m_location;
+    mvp_location = glGetUniformLocation(program, "MVP");
+    m_location   = glGetUniformLocation(program, "M");
 
-    GLCall(glEnableVertexAttribArray(vpos_location));
-    GLCall(glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, sizeof(Mesh::Vertex), (void*) 0));
-    GLCall(glEnableVertexAttribArray(vuv_location));
-    GLCall(glVertexAttribPointer(vuv_location, 2, GL_FLOAT, GL_FALSE, sizeof(Mesh::Vertex), (void*) (sizeof(glm::vec3))));
-    GLCall(glEnableVertexAttribArray(vn_location));
-    GLCall(glVertexAttribPointer(vn_location, 3, GL_FLOAT, GL_FALSE, sizeof(Mesh::Vertex), (void*) (sizeof(glm::vec3) + sizeof(glm::vec2))));
+	bind_mesh(mesh);
+    GLCall(glEnableVertexAttribArray(0));
+    GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MeshData::Vertex), (void*) 0));
+    GLCall(glEnableVertexAttribArray(1));
+    GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshData::Vertex), (void*) (sizeof(glm::vec3))));
+    GLCall(glEnableVertexAttribArray(2));
+    GLCall(glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(MeshData::Vertex), (void*) (sizeof(glm::vec3) + sizeof(glm::vec2))));
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     while (!glfwWindowShouldClose(window))
     {      
-        float ratio;
+        float aspect_ratio;
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
-        ratio = width / (float) height;
+        aspect_ratio = width / (float) height;
  
         GLCall(glViewport(0, 0, width, height));
         GLCall(glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w));
@@ -144,7 +145,7 @@ int main(void)
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
- 		// 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
+         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
             ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
@@ -155,31 +156,24 @@ int main(void)
         }
         // Rendering
         ImGui::Render();
- 
-		glm::mat4 projection = glm::perspective(glm::radians(45.0f), ratio, 0.1f, 100.f);
-		glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.f));
-		glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(0.5f));
-		model = glm::rotate(view, (float) glfwGetTime(), glm::vec3(-1.0f, 0.0f, 0.0f));
-		model = glm::rotate(view, (float) glfwGetTime(), glm::vec3(0.0f, 1.0f, 0.0f));
-		glm::mat4 mvp = projection * view * model;
+
+        camera.aspect_ratio = aspect_ratio;
+        glm::mat4 projection = get_projection_matrix(camera);
+        glm::mat4 view = get_view_matrix(camera);
+        glm::mat4 model = glm::mat4(1.0f);
+        model = glm::rotate(model, (float) glfwGetTime() / 10.f, glm::vec3(-1.0f, 0.0f, 0.0f));
+        model = glm::rotate(model, (float) glfwGetTime() / 10.f, glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 mvp = projection * view * model;
 
         GLCall(glUseProgram(program));
         GLCall(glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) &mvp));
         GLCall(glUniformMatrix4fv(m_location, 1, GL_FALSE, (const GLfloat*) &model));
-		// GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
+        
+        bind_texture(siggraph_tex);
+        draw_mesh(mesh);
 
-		GLCall(glBindTexture(GL_TEXTURE_2D, texture));
-        GLCall(glBindVertexArray(VAO));
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-		GLCall(glDrawElements(
-			GL_TRIANGLES,      // mode
-			cube.indices.size(),    // count
-			GL_UNSIGNED_INT,   // type
-			(void*)0           // element array buffer offset
-		));
-
-        // ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
- 
         glfwSwapBuffers(window);
         glfwPollEvents();
     }

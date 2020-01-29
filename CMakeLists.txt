@@ -105,6 +105,9 @@ add_executable(tolmak
 
   src/mesh_io.cpp include/mesh_io.h
   src/shader.cpp include/shader.h
+  src/texture.cpp include/texture.h
+  include/orbit_camera.h
+  include/mesh.h
   include/common.h
 
   ext/glad/src/glad.c
