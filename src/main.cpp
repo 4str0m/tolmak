@@ -8,6 +8,9 @@
 #include <common.h>
 #include <mesh_io.h>
 #include <shader.h>
+
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb_image.h>
  
 static void error_callback(int error, const char* description)
 {
@@ -66,7 +69,31 @@ int main(void)
     // NOTE: OpenGL error checks have been omitted for brevity
 
 	Mesh cube;
-	load_obj("../resources/meshes/monkey.obj", cube);
+	load_obj("../resources/meshes/cube.obj", cube);
+
+
+	unsigned int texture;
+	GLCall(glGenTextures(1, &texture));
+	GLCall(glBindTexture(GL_TEXTURE_2D, texture));
+	// set the texture wrapping/filtering options (on the currently bound texture object)
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+	GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	// load and generate the texture
+	int width, height, nrChannels;
+	unsigned char *data = stbi_load("../resources/siggraph.png", &width, &height, &nrChannels, 0);
+	if (data)
+	{
+	    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data));
+	    GLCall(glGenerateMipmap(GL_TEXTURE_2D));
+	}
+	else
+	{
+	    std::cout << "Failed to load texture" << std::endl;
+	}
+	stbi_image_free(data);
+
 
 	GLuint VAO, VBO, EBO;
 
@@ -93,8 +120,8 @@ int main(void)
 
     GLCall(glEnableVertexAttribArray(vpos_location));
     GLCall(glVertexAttribPointer(vpos_location, 3, GL_FLOAT, GL_FALSE, sizeof(Mesh::Vertex), (void*) 0));
-    // GLCall(glEnableVertexAttribArray(vuv_location));
-    // GLCall(glVertexAttribPointer(vuv_location, 2, GL_FLOAT, GL_FALSE, sizeof(Mesh::Vertex), (void*) (sizeof(glm::vec3))));
+    GLCall(glEnableVertexAttribArray(vuv_location));
+    GLCall(glVertexAttribPointer(vuv_location, 2, GL_FLOAT, GL_FALSE, sizeof(Mesh::Vertex), (void*) (sizeof(glm::vec3))));
     GLCall(glEnableVertexAttribArray(vn_location));
     GLCall(glVertexAttribPointer(vn_location, 3, GL_FLOAT, GL_FALSE, sizeof(Mesh::Vertex), (void*) (sizeof(glm::vec3) + sizeof(glm::vec2))));
 
@@ -141,7 +168,7 @@ int main(void)
         GLCall(glUniformMatrix4fv(m_location, 1, GL_FALSE, (const GLfloat*) &model));
 		// GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO));
 
-		// Draw the triangles !
+		GLCall(glBindTexture(GL_TEXTURE_2D, texture));
         GLCall(glBindVertexArray(VAO));
 
 		GLCall(glDrawElements(

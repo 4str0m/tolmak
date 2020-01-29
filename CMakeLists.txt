@@ -54,6 +54,7 @@ add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/glfw"  "ext_build/glfw")
 include_directories(ext/glfw/include)
 include_directories(ext/glad/include)
 include_directories(ext/imgui)
+include_directories(ext/stb)
 
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/ext/glm"  "ext_build/glm")
 include_directories(ext/glm)
