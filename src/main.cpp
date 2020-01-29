@@ -11,6 +11,7 @@
 #include <mesh.h>
 #include <shader.h>
 #include <texture.h>
+#include <light.h>
 
 
 OrbitCamera camera = {
@@ -20,6 +21,11 @@ OrbitCamera camera = {
 	glm::radians(45.f),
 	1.f,
 	0.1f, 100.f
+};
+
+PointLight point_light = {
+    glm::vec3(0.f, 4.f, 0.f),
+    glm::vec3(1.f, .8f, 0.9f)
 };
 
 static MouseState mouse_state;
@@ -146,6 +152,9 @@ int main(void)
 
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
+            ImGui::SliderFloat3("Light pos", (float*)&point_light.pos, -10.f, 10.f);
+            ImGui::ColorEdit3("Light color", (float*)&point_light.color);
+
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
@@ -162,6 +171,9 @@ int main(void)
         shader_set_uniform_mat4(shader, "MVP", mvp);
         shader_set_uniform_mat4(shader, "M", model);
         shader_set_uniform_3f(shader, "EYE", camera._eye);
+
+        shader_set_uniform_3f(shader, "point_light.pos", point_light.pos);
+        shader_set_uniform_3f(shader, "point_light.color", point_light.color);
         
         bind_texture(siggraph_tex);
         draw_mesh(mesh);

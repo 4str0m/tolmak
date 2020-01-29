@@ -39,18 +39,23 @@ out vec4 output_color;
 
 uniform sampler2D diff_tex;
 
-const vec3 light_color = vec3(0.8f, 0.8f, 0.7f);
+struct PointLight {
+    vec3 pos;
+    vec3 color;
+};
+
+uniform PointLight point_light;
 
 void main()
 {
 	vec3 norm = normalize(normal);
-	vec3 pos_to_light = normalize(vec3(0, 0, 4) - position);
+	vec3 pos_to_light = normalize(point_light.pos - position);
 	vec3 pos_to_camera = normalize(camera_pos - position);
     float specular = clamp(dot(reflect(-pos_to_light, norm), pos_to_camera), 0.0f, 1.0f);
     vec3 object_color = texture(diff_tex, uv).rgb;
     vec3 color = vec3(0.f);
-    color += (0.2f + max(dot(pos_to_light, norm), 0.0f)) * object_color * light_color;
-    color += pow(specular, 20.0f) * light_color;
+    color += (0.2f + max(dot(pos_to_light, norm), 0.0f)) * object_color * point_light.color;
+    color += pow(specular, 20.0f) * point_light.color;
 
     output_color = vec4(color, 1.0);
 };

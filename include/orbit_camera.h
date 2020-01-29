@@ -43,7 +43,7 @@ inline void camera_handle_scroll(OrbitCamera& camera, double xoffset, double yof
 }
 inline void camera_handle_mouse_move(OrbitCamera& camera, MouseState mouse_state)
 {
-	if (mouse_state.buttons[GLFW_MOUSE_BUTTON_LEFT])
+	if (mouse_state.buttons[GLFW_MOUSE_BUTTON_MIDDLE])
 	{
 		camera.theta = glm::clamp(camera.theta + mouse_state.dy * .01f, -HALF_PI + .01f, HALF_PI - .01f);
 		camera.phi   = camera.phi + mouse_state.dx * .01f;

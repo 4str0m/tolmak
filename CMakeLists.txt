@@ -108,6 +108,7 @@ add_executable(tolmak
   src/texture.cpp include/texture.h
   include/orbit_camera.h
   include/mesh.h
+  include/light.h
   include/common.h
 
   ext/glad/src/glad.c
