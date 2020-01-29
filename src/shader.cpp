@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-GLuint load_shader(const char* filename)
+Shader load_shader(const char* filename)
 {
 	FILE* shader_file = fopen(filename, "r");
 
@@ -81,5 +81,7 @@ GLuint load_shader(const char* filename)
 	    exit(EXIT_FAILURE);
 	}
 
- 	return program;
+	Shader shader;
+	shader.program = program;
+ 	return shader;
 }

@@ -45,3 +45,20 @@ inline bool GL_log_error(const char* func, const char* file, int line)
 	}
 	return false;
 }
+
+inline uint32_t size_of_gl_type(GLenum type)
+{
+    switch(type)
+    {
+        case GL_SHORT:
+        case GL_UNSIGNED_SHORT:
+            return 2;
+        case GL_INT:
+        case GL_UNSIGNED_INT:
+        case GL_FLOAT:
+            return 4;
+        default:
+            std::cout << "OPEN_GL type not handled" << std::endl;
+            exit(EXIT_FAILURE);
+    }
+}

@@ -9,6 +9,11 @@ struct Mesh
     uint32_t indices_count;
 };
 
+inline void bind_mesh(const Mesh& mesh)
+{
+    GLCall(glBindVertexArray(mesh.VAO));
+}
+
 inline void mesh_from_mesh_data(const MeshData& mesh_data, Mesh& mesh)
 {
     GLCall(glGenVertexArrays(1, &mesh.VAO));
@@ -23,11 +28,6 @@ inline void mesh_from_mesh_data(const MeshData& mesh_data, Mesh& mesh)
     mesh.indices_count = mesh_data.indices.size();
 }
 
-inline void bind_mesh(const Mesh& mesh)
-{
-    GLCall(glBindVertexArray(mesh.VAO));
-}
-
 inline void draw_mesh(const Mesh& mesh)
 {
     GLCall(glBindVertexArray(mesh.VAO));
@@ -38,4 +38,35 @@ inline void draw_mesh(const Mesh& mesh)
         GL_UNSIGNED_INT,   // type
         (void*)0           // element array buffer offset
     ));
+}
+
+struct VertexAttribs
+{
+    struct VertexAttrib
+    {
+        int size;
+        GLenum type;
+        GLboolean normalized;
+        void* offset;
+    };
+
+    uint64_t total_size = 0;
+    std::vector<VertexAttrib> attribs;
+};
+
+inline void vertex_attribs_append(VertexAttribs& attribs, int size, GLenum type, GLboolean normalized = GL_FALSE)
+{
+    attribs.attribs.push_back({size, type, normalized, (void*) attribs.total_size});
+    attribs.total_size += size * size_of_gl_type(type);
+}
+
+inline void vertex_attribs_enable_all(const VertexAttribs& attribs, const Mesh& mesh)
+{
+    bind_mesh(mesh);
+    for (uint32_t i = 0; i < attribs.attribs.size(); ++i)
+    {
+        const VertexAttribs::VertexAttrib attrib = attribs.attribs[i];
+        GLCall(glEnableVertexAttribArray(i));
+        GLCall(glVertexAttribPointer(i, attrib.size, attrib.type, attrib.normalized, attribs.total_size, attrib.offset));
+    }
 }

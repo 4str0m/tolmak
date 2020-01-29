@@ -5,6 +5,7 @@
 
 uniform mat4 MVP;
 uniform mat4 M;
+uniform vec3 EYE;
 
 layout (location = 0) in vec3 vPos;
 layout (location = 1) in vec2 vUV;
@@ -13,6 +14,7 @@ layout (location = 2) in vec3 vN;
 out vec3 normal;
 out vec3 position;
 out vec2 uv;
+out vec3 camera_pos;
 
 void main()
 {
@@ -21,6 +23,7 @@ void main()
 	normal = ITM * vN;
 	position = (M * vec4(vPos, 1.0)).xyz;
 	uv = vUV;
+	camera_pos = EYE;
 };
 
 // #FRAGMENT#
@@ -30,6 +33,7 @@ void main()
 in vec3 normal;
 in vec3 position;
 in vec2 uv;
+in vec3 camera_pos;
 
 out vec4 output_color;
 
@@ -41,7 +45,8 @@ void main()
 {
 	vec3 norm = normalize(normal);
 	vec3 pos_to_light = normalize(vec3(0, 0, 4) - position);
-    float specular = clamp(dot(reflect(-pos_to_light, norm), pos_to_light), 0.0f, 1.0f);
+	vec3 pos_to_camera = normalize(camera_pos - position);
+    float specular = clamp(dot(reflect(-pos_to_light, norm), pos_to_camera), 0.0f, 1.0f);
     vec3 object_color = texture(diff_tex, uv).rgb;
     vec3 color = vec3(0.f);
     color += (0.2f + max(dot(pos_to_light, norm), 0.0f)) * object_color * light_color;

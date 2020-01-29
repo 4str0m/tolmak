@@ -106,25 +106,20 @@ int main(void)
     Texture siggraph_tex;
     load_texture("../resources/siggraph.png", siggraph_tex);
 
-    MeshData mesh_data;
-    load_obj("../resources/meshes/monkey.obj", mesh_data);
-
     Mesh mesh;
-    mesh_from_mesh_data(mesh_data, mesh);
+    {
+        MeshData mesh_data;
+        load_obj("../resources/meshes/monkey.obj", mesh_data);
+        mesh_from_mesh_data(mesh_data, mesh);
+    }
 
-    GLuint program = load_shader("../resources/shaders/phong.glsl");
+    Shader shader = load_shader("../resources/shaders/phong.glsl");
  
-    GLint mvp_location, m_location;
-    mvp_location = glGetUniformLocation(program, "MVP");
-    m_location   = glGetUniformLocation(program, "M");
-
-	bind_mesh(mesh);
-    GLCall(glEnableVertexAttribArray(0));
-    GLCall(glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(MeshData::Vertex), (void*) 0));
-    GLCall(glEnableVertexAttribArray(1));
-    GLCall(glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(MeshData::Vertex), (void*) (sizeof(glm::vec3))));
-    GLCall(glEnableVertexAttribArray(2));
-    GLCall(glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(MeshData::Vertex), (void*) (sizeof(glm::vec3) + sizeof(glm::vec2))));
+    VertexAttribs attribs;
+    vertex_attribs_append(attribs, 3, GL_FLOAT);
+    vertex_attribs_append(attribs, 2, GL_FLOAT);
+    vertex_attribs_append(attribs, 3, GL_FLOAT);
+    vertex_attribs_enable_all(attribs, mesh);
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -161,13 +156,12 @@ int main(void)
         glm::mat4 projection = get_projection_matrix(camera);
         glm::mat4 view = get_view_matrix(camera);
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::rotate(model, (float) glfwGetTime() / 10.f, glm::vec3(-1.0f, 0.0f, 0.0f));
-        model = glm::rotate(model, (float) glfwGetTime() / 10.f, glm::vec3(0.0f, 1.0f, 0.0f));
         glm::mat4 mvp = projection * view * model;
 
-        GLCall(glUseProgram(program));
-        GLCall(glUniformMatrix4fv(mvp_location, 1, GL_FALSE, (const GLfloat*) &mvp));
-        GLCall(glUniformMatrix4fv(m_location, 1, GL_FALSE, (const GLfloat*) &model));
+        shader_bind(shader);
+        shader_set_uniform_mat4(shader, "MVP", mvp);
+        shader_set_uniform_mat4(shader, "M", model);
+        shader_set_uniform_3f(shader, "EYE", camera._eye);
         
         bind_texture(siggraph_tex);
         draw_mesh(mesh);
