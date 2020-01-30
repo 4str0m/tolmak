@@ -4,7 +4,7 @@
 
 static const char* common_uniforms =
 "#version 460\n"
-
+"#define N_POINT_LIGHTS 10u\n"
 "uniform mat4 MVP;\n"
 "uniform mat4 M;\n"
 "uniform vec3 EYE;\n"
@@ -12,16 +12,19 @@ static const char* common_uniforms =
 "    vec3 pos;\n"
 "    vec3 color;\n"
 "};\n"
-"uniform PointLight point_light;\n";
+"uniform PointLight point_lights[N_POINT_LIGHTS];\n";
 
 void load_shader(Shader& shader, const char* filename)
-{
+{    
     FILE* shader_file = fopen(filename, "r");
 
     if (!shader_file) {
         std::cout << "ERROR: could not load shader file." << std::endl;
         exit(EXIT_FAILURE);
     }
+
+    std::cout << "Loading \"" << filename << "\" .. ";
+
     enum State
     {
         NONE = -1,
@@ -74,6 +77,11 @@ void load_shader(Shader& shader, const char* filename)
     }
 
     GLuint program = glCreateProgram();
+    if (!program)
+    {
+        std::cout << "Error: could not create program." << std::endl;
+        exit(EXIT_FAILURE);
+    }
     GLCall(glAttachShader(program, shaders[VERT]));
     GLCall(glAttachShader(program, shaders[FRAG]));
     if (has_geometry_shader)
@@ -96,4 +104,5 @@ void load_shader(Shader& shader, const char* filename)
     }
 
     shader.program = program;
+    std::cout << " done." << std::endl;
 }

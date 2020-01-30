@@ -28,7 +28,7 @@ macro(CHECK_CXX_COMPILER_AND_LINKER_FLAGS _RESULT _CXX_FLAGS _LINKER_FLAGS)
   set(CMAKE_REQUIRED_FLAGS "")
   set(CMAKE_REQUIRED_LIBRARIES "")
 endmacro()
-
+  
 # Compile GLFW
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL " " FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL " " FORCE)
@@ -119,11 +119,11 @@ add_executable(tolmak
   src/mesh_io.cpp include/mesh_io.h
   src/shader.cpp include/shader.h
   src/texture.cpp include/texture.h
+  src/light.cpp include/light.h
+  src/mesh.cpp include/mesh.h
   include/orbit_camera.h
-  include/mesh.h
   # include/material.h
   include/materials.h
-  include/light.h
   include/common.h
 
   ext/glad/src/glad.c

@@ -53,6 +53,7 @@ inline void parse_shader(const char* shader_file_path)
 
     enum UniformType
     {
+        INT,
         FLOAT, VEC2, VEC3, VEC4,
         MAT2, MAT3, MAT4,
         SAMPLER2D,
@@ -61,6 +62,7 @@ inline void parse_shader(const char* shader_file_path)
     };
 
     const char* uniform_type_names[UNIFORM_TYPE_COUNT] = {
+        "int",
         "float", "vec2", "vec3", "vec4",
         "mat2", "mat3", "mat4",
         "sampler2D"
@@ -68,12 +70,14 @@ inline void parse_shader(const char* shader_file_path)
 
     const char* set_uniform_prefix = "shader_set_uniform_";
     const char* uniform_type_function_postfix[UNIFORM_TYPE_COUNT] = {
+        "1i",
         "1f", "2f", "3f", "4f",
         "mat2", "mat3", "mat4",
         "1i"
     };
 
     const char* uniform_type_cpp[UNIFORM_TYPE_COUNT] = {
+        "int",
         "float", "glm::vec2", "glm::vec3", "glm::vec4",
         "glm::mat2", "glm::mat3", "glm::mat4",
         "Texture"
@@ -87,20 +91,30 @@ inline void parse_shader(const char* shader_file_path)
 
     struct_ss << "struct " << struct_material_name << " {\n"
         "\tShader shader;\n";
-    use_material_ss << "inline void use_material(" << struct_material_name << "& material, const glm::mat4& mvp, const glm::mat4& model, const glm::vec3& eye, const PointLight& point_light) {\n"
+    use_material_ss << "inline void use_material(" << struct_material_name << "& material, const glm::mat4& mvp,"
+                    " const glm::mat4& model, const glm::vec3& eye)\n{\n"
                     "\tshader_bind(material.shader);\n"
                     "\tshader_set_uniform_mat4(material.shader, \"MVP\", mvp);\n"
                     "\tshader_set_uniform_mat4(material.shader, \"M\", model);\n"
                     "\tshader_set_uniform_3f(material.shader, \"EYE\", eye);\n"
-                    "\tshader_set_uniform_3f(material.shader, \"point_light.pos\", point_light.pos);\n"
-                    "\tshader_set_uniform_3f(material.shader, \"point_light.color\", point_light.color);\n\n";
 
-    create_material_signature_ss << "inline void create_" << material_name << "_material(\n\t"
+                    "\tconst char* point_light_pos_fmt = \"point_lights[%u].pos\";\n"
+                    "\tconst char* point_light_col_fmt = \"point_lights[%u].color\";\n"
+                    "\tchar point_light_pos[256];\n"
+                    "\tchar point_light_col[256];\n"
+                    "\tfor(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {\n"
+                    "\t\tsnprintf(point_light_pos, 256, point_light_pos_fmt, i);\n"
+                    "\t\tsnprintf(point_light_col, 256, point_light_col_fmt, i);\n"
+                    "\t\tshader_set_uniform_3f(material.shader, point_light_pos, point_lights[i].pos);\n"
+                    "\t\tshader_set_uniform_3f(material.shader, point_light_col, point_lights[i].color);\n"
+                    "\t}\n\n";
+
+    create_material_signature_ss << "inline void create_material(\n\t"
         << struct_material_name << "& material";
     create_material_body_ss << "{\n"
         "\tload_shader(material.shader, \"" << shader_file_path << "\");\n";
 
-    imgui_ss << "inline void " << material_name << "_material_imgui(" << struct_material_name << "& material)\n{\n"
+    imgui_ss << "inline void material_imgui(" << struct_material_name << "& material)\n{\n"
         "\tImGui::Begin(\"" << struct_material_name << "\");\n";
 
     char line[512];
@@ -155,15 +169,15 @@ inline void parse_shader(const char* shader_file_path)
                 }
                 else
                 {
-                    struct_ss << "= " << uniform_type_cpp[i] << "(0.f);\n";
+                    struct_ss << " = " << uniform_type_cpp[i] << "(0);\n";
                     use_material_ss << "\t"
                         << set_uniform_prefix << uniform_type_function_postfix[i]
                         << "(material.shader, \"" << variable_name << "\", material." << variable_name << ");\n";
                 }
-                if (i <= VEC4) {
+                if (i > INT && i <= VEC4) {
                     const char* imgui_func = i == VEC3 ? "ImGui::ColorEdit" : "ImGui::SliderFloat";
                     imgui_ss << "\t" << imgui_func;
-                    if (i != 0) imgui_ss << (i+1);
+                    if (i != 1) imgui_ss << i;
                     imgui_ss << "(\"" << variable_name << "\", (float*)&material." << variable_name;
                     if (i == VEC3) imgui_ss << ");\n";
                     else imgui_ss << ", 0.f, 1.f);\n";
@@ -195,7 +209,10 @@ int main(int argc, char const *argv[])
         "#include <common.h>\n"
         "#include <shader.h>\n" 
         "#include <texture.h>\n"
-        "#include <light.h>\n" << std::endl;
+        "#include <light.h>\n"
+        "#include <imgui.h>\n"
+        "#include <examples/imgui_impl_glfw.h>\n"
+        "#include <examples/imgui_impl_opengl3.h>\n" << std::endl;
 
     for (int i = 1; i < argc; ++i) {
         parse_shader(argv[i]);

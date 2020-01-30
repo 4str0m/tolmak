@@ -12,7 +12,6 @@
 #include <materials.h>
 #include <light.h>
 
-
 OrbitCamera camera = {
 	glm::vec3(0.f,  0.f, 0.f),
 	0.f, 0.f,
@@ -20,11 +19,6 @@ OrbitCamera camera = {
 	glm::radians(45.f),
 	1.f,
 	0.1f, 100.f
-};
-
-PointLight point_light = {
-    glm::vec3(0.f, 4.f, 0.f),
-    glm::vec3(0.9f, .8f, 0.9f)
 };
 
 static MouseState mouse_state;
@@ -105,15 +99,17 @@ int main(void)
     // Setup Platform/Renderer bindings
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
+    
+    init_lights();
  
     GLCall(glEnable(GL_DEPTH_TEST));
     GLCall(glFrontFace(GL_CCW));
     GLCall(glCullFace(GL_BACK));
-    GLCall(glEnable(GL_CULL_FACE));
+    // GLCall(glEnable(GL_CULL_FACE));
     // GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 
     PhongMaterial phong;
-    create_phong_material(phong,
+    create_material(phong,
         "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_COL_3K.jpg",
         "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg",
         "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg");
@@ -121,29 +117,34 @@ int main(void)
     Mesh mesh;
     {
         MeshData mesh_data;
-        load_obj("../resources/meshes/cube.obj", mesh_data);
-        // load_obj("../resources/meshes/monkey.obj", mesh_data);
+        load_obj(mesh_data, "../resources/meshes/sphere_hres.obj");
         mesh_from_mesh_data(mesh_data, mesh);
+
+        VertexAttribs attribs;
+        vertex_attribs_append(attribs, 3, GL_FLOAT);
+        vertex_attribs_append(attribs, 2, GL_FLOAT);
+        vertex_attribs_append(attribs, 3, GL_FLOAT);
+        vertex_attribs_append(attribs, 3, GL_FLOAT);
+        vertex_attribs_append(attribs, 3, GL_FLOAT);
+        vertex_attribs_enable_all(attribs, mesh);
     }
 
-    VertexAttribs attribs;
-    vertex_attribs_append(attribs, 3, GL_FLOAT);
-    vertex_attribs_append(attribs, 2, GL_FLOAT);
-    vertex_attribs_append(attribs, 3, GL_FLOAT);
-    vertex_attribs_append(attribs, 3, GL_FLOAT);
-    vertex_attribs_append(attribs, 3, GL_FLOAT);
-    vertex_attribs_enable_all(attribs, mesh);
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
     while (!glfwWindowShouldClose(window))
-    {      
+    {
         float aspect_ratio;
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         aspect_ratio = width / (float) height;
  
+        float time = (float)glfwGetTime();
+        float r = 3.f;
+        point_lights[0].pos = glm::vec3(r * sin(time), 0.f, r * cos(time));
+        point_lights[1].pos = glm::vec3(r * sin(time + PI), 0.f, r * cos(time + PI));
+
         GLCall(glViewport(0, 0, width, height));
         GLCall(glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w));
         GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
@@ -155,17 +156,19 @@ int main(void)
 
          // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+            ImGui::Begin("General Infos");                          // Create a window called "Hello, world!" and append into it.
 
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-            ImGui::SliderFloat3("Light pos", (float*)&point_light.pos, -10.f, 10.f);
-            ImGui::ColorEdit3("Light color", (float*)&point_light.color);
+            static int light_index = 0;
+            ImGui::SliderInt("Light index", &light_index, 0, N_POINT_LIGHTS);
+            ImGui::SliderFloat3("Light pos", (float*)&point_lights[light_index].pos, -10.f, 10.f);
+            ImGui::ColorEdit3("Light color", (float*)&point_lights[light_index].color);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
-        phong_material_imgui(phong);
+        material_imgui(phong);
         // Rendering
         ImGui::Render();
 
@@ -175,8 +178,10 @@ int main(void)
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 mvp = projection * view * model;
 
-        use_material(phong, mvp, model, camera._eye, point_light);
+        use_material(phong, mvp, model, camera._eye);
         draw_mesh(mesh);
+
+        draw_lights(projection * view);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

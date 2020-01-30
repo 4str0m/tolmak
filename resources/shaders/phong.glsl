@@ -1,4 +1,5 @@
 // #VERTEX#
+#pragma optionNV unroll all
 
 layout (location = 0) in vec3 vPos;
 layout (location = 1) in vec2 vUV;
@@ -12,39 +13,40 @@ out vec2 uv;
 out vec2 normal;
 out vec3 tangent_camera_pos;
 
-out PointLight tangent_point_light;
+out PointLight tangent_point_lights[N_POINT_LIGHTS];
+
+uniform float uv_scale;
 
 void main()
 {
     gl_Position = MVP * vec4(vPos, 1.0);
     position = (M * vec4(vPos, 1.0)).xyz;
-    uv = vUV * .5f;
+    uv = vUV * uv_scale;
 
     mat3 ITM = inverse(transpose(mat3(M)));
     vec3 T = normalize(ITM * vT);
     vec3 N = normalize(ITM * vN);
     T = normalize(T - dot(T, N) * N);
-    vec3 B = cross(N, T);
+    vec3 B = cross(T, N);
     mat3 TBN = transpose(mat3(T, B, N));
 
-    tangent_point_light.pos = TBN * point_light.pos;
-    tangent_point_light.color = point_light.color;
+    for(int i = 0; i < N_POINT_LIGHTS; ++i) {
+        tangent_point_lights[i].pos = TBN * point_lights[i].pos;
+        tangent_point_lights[i].color = point_lights[i].color;
+    }
     tangent_camera_pos = TBN * EYE;
     tangent_position = TBN * position;
 };
 
 // #FRAGMENT#
+#pragma optionNV unroll all
 
 in vec3 position;
 in vec3 tangent_position;
 in vec2 uv;
 in vec3 tangent_camera_pos;
 
-struct PointLight {
-    vec3 pos;
-    vec3 color;
-};
-in PointLight tangent_point_light;
+in PointLight tangent_point_lights[N_POINT_LIGHTS];
 
 out vec4 output_color;
 
@@ -55,6 +57,17 @@ uniform sampler2D bump_tex;
 uniform vec3 tint;
 uniform float specularity;
 uniform float bump_strength;
+
+vec3 point_light(PointLight point_light, vec3 normal, vec3 object_color, vec3 object_specular) {
+    vec3 pos_to_light = normalize(point_light.pos - tangent_position);
+    float diff = max(dot(pos_to_light, normal), 0.0f);
+    vec3 diffuse = diff * object_color * point_light.color * tint;
+
+    vec3 pos_to_camera = normalize(tangent_camera_pos - tangent_position);
+    float spec = clamp(dot(reflect(-pos_to_light, normal), pos_to_camera), 0.0f, 1.0f);
+    vec3 specular = specularity * object_specular * pow(spec, 20.0f) * point_light.color;
+    return diffuse + specular;
+}
 
 void main()
 {
@@ -68,13 +81,10 @@ void main()
 
     vec3 ambient = 0.1 * object_color;
 
-    vec3 pos_to_light = normalize(tangent_point_light.pos - tangent_position);
-    float diff = max(dot(pos_to_light, normal), 0.0f);
-    vec3 diffuse = diff * object_color * tangent_point_light.color * tint;
+    vec3 color = ambient;
+    for(unsigned int i = 0; i < N_POINT_LIGHTS; ++i) {
+        color += point_light(tangent_point_lights[i], normal, object_color, object_specular);
+    }
 
-    vec3 pos_to_camera = normalize(tangent_camera_pos - tangent_position);
-    float spec = clamp(dot(reflect(-pos_to_light, normal), pos_to_camera), 0.0f, 1.0f);
-    vec3 specular = specularity * object_specular * pow(spec, 20.0f) * tangent_point_light.color;
-
-    output_color = vec4(ambient + diffuse + specular, 1.0);
+    output_color = vec4(color, 1.0);
 };

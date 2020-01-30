@@ -1,6 +1,6 @@
 #include <mesh_io.h>
 
-void load_obj(const char *filename, MeshData& mesh) {
+void load_obj(MeshData& mesh, const char *filename) {
     /// Vertex indices used by the OBJ format
     struct obj_vertex {
         uint32_t p = (uint32_t) -1;
