@@ -113,10 +113,10 @@ int main(void)
     GLCall(glEnable(GL_CULL_FACE));
     // GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 
-    Texture diffuse;
-    Texture bump;
+    Texture diffuse, bump, spec;
     // load_texture("../resources/siggraph.png", siggraph_tex);
     load_texture("../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_COL_3K.jpg", diffuse);
+    load_texture("../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg", spec);
     load_texture("../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg", bump);
 
     Mesh mesh;
@@ -185,10 +185,12 @@ int main(void)
         shader_set_uniform_3f(shader, "point_light.pos", point_light.pos);
         shader_set_uniform_3f(shader, "point_light.color", point_light.color);
         shader_set_uniform_1i(shader, "diff_tex", 0);
-        shader_set_uniform_1i(shader, "bump_tex", 1);
+        shader_set_uniform_1i(shader, "spec_tex", 1);
+        shader_set_uniform_1i(shader, "bump_tex", 2);
         
         bind_texture(diffuse, 0);
-        bind_texture(bump, 1);
+        bind_texture(spec, 1);
+        bind_texture(bump, 2);
         draw_mesh(mesh);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

@@ -63,6 +63,7 @@ in PointLight tangent_point_light;
 out vec4 output_color;
 
 uniform sampler2D diff_tex;
+uniform sampler2D spec_tex;
 uniform sampler2D bump_tex;
 
 void main()
@@ -71,6 +72,7 @@ void main()
     normal = normalize(normal * 2.0 - 1.0);
 
     vec3 object_color = texture(diff_tex, uv).rgb;
+    vec3 object_specular = texture(spec_tex, uv).rgb;
 
     vec3 ambient = 0.1 * object_color;
 
@@ -80,7 +82,7 @@ void main()
 
     vec3 pos_to_camera = normalize(tangent_camera_pos - tangent_position);
     float spec = clamp(dot(reflect(-pos_to_light, normal), pos_to_camera), 0.0f, 1.0f);
-    vec3 specular = vec3(0.5) * pow(spec, 20.0f) * tangent_point_light.color;
+    vec3 specular = object_specular * pow(spec, 20.0f) * tangent_point_light.color;
 
     output_color = vec4(ambient + diffuse + specular, 1.0);
 };
