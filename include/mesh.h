@@ -34,7 +34,7 @@ inline void draw_mesh(const Mesh& mesh)
 
     GLCall(glDrawElements(
         GL_TRIANGLES,      // mode
-        mesh.indices_count,    // count
+        mesh.indices_count,// count
         GL_UNSIGNED_INT,   // type
         (void*)0           // element array buffer offset
     ));

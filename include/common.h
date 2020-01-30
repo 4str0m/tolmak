@@ -20,30 +20,30 @@
 #define TWO_PI 6.283185307f
 
 #define GLCall(x)\
-	do {\
-		GL_clear_errors();\
-		x;\
-		if (GL_log_error(#x, __FILE__, __LINE__)) exit(EXIT_FAILURE);\
-	} while(0)
+    do {\
+        GL_clear_errors();\
+        x;\
+        if (GL_log_error(#x, __FILE__, __LINE__)) exit(EXIT_FAILURE);\
+    } while(0)
 
 struct MouseState
 {
-	float x, y;
-	float dx, dy;
-	bool buttons[3];
+    float x, y;
+    float dx, dy;
+    bool buttons[3];
 };
 
 inline void GL_clear_errors() { while(glGetError()); }
 
 inline bool GL_log_error(const char* func, const char* file, int line)
 {
-	if (GLenum error = glGetError())
-	{
-		std::cout << "[OpenGL Error] " << "0x" << std::hex << error << ": " <<  func <<
-			" " << file << ":" << line << std::endl;
-		return true;
-	}
-	return false;
+    if (GLenum error = glGetError())
+    {
+        std::cout << "[OpenGL Error] " << "0x" << std::hex << error << ": " <<  func <<
+            " " << file << ":" << line << std::endl;
+        return true;
+    }
+    return false;
 }
 
 inline uint32_t size_of_gl_type(GLenum type)

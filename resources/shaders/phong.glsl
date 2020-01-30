@@ -19,11 +19,11 @@ out vec3 camera_pos;
 void main()
 {
     gl_Position = MVP * vec4(vPos, 1.0);
-	mat3 ITM = mat3(inverse(transpose(M)));
-	normal = ITM * vN;
-	position = (M * vec4(vPos, 1.0)).xyz;
-	uv = vUV;
-	camera_pos = EYE;
+    mat3 ITM = mat3(inverse(transpose(M)));
+    normal = ITM * vN;
+    position = (M * vec4(vPos, 1.0)).xyz;
+    uv = vUV;
+    camera_pos = EYE;
 };
 
 // #FRAGMENT#
@@ -48,9 +48,9 @@ uniform PointLight point_light;
 
 void main()
 {
-	vec3 norm = normalize(normal);
-	vec3 pos_to_light = normalize(point_light.pos - position);
-	vec3 pos_to_camera = normalize(camera_pos - position);
+    vec3 norm = normalize(normal);
+    vec3 pos_to_light = normalize(point_light.pos - position);
+    vec3 pos_to_camera = normalize(camera_pos - position);
     float specular = clamp(dot(reflect(-pos_to_light, norm), pos_to_camera), 0.0f, 1.0f);
     vec3 object_color = texture(diff_tex, uv).rgb;
     vec3 color = vec3(0.f);

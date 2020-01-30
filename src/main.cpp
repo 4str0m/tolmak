@@ -108,6 +108,10 @@ int main(void)
     ImGui_ImplOpenGL3_Init(glsl_version);
  
     GLCall(glEnable(GL_DEPTH_TEST));
+    GLCall(glFrontFace(GL_CCW));
+    GLCall(glCullFace(GL_BACK));
+    GLCall(glEnable(GL_CULL_FACE));
+    // GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 
     Texture siggraph_tex;
     load_texture("../resources/siggraph.png", siggraph_tex);
@@ -115,6 +119,7 @@ int main(void)
     Mesh mesh;
     {
         MeshData mesh_data;
+        // load_obj("../resources/meshes/cube.obj", mesh_data);
         load_obj("../resources/meshes/monkey.obj", mesh_data);
         mesh_from_mesh_data(mesh_data, mesh);
     }
