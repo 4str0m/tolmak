@@ -25,7 +25,7 @@ OrbitCamera camera = {
 
 PointLight point_light = {
     glm::vec3(0.f, 4.f, 0.f),
-    glm::vec3(1.f, .8f, 0.9f)
+    glm::vec3(0.9f, .8f, 0.9f)
 };
 
 static MouseState mouse_state;
@@ -113,14 +113,17 @@ int main(void)
     GLCall(glEnable(GL_CULL_FACE));
     // GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 
-    Texture siggraph_tex;
-    load_texture("../resources/siggraph.png", siggraph_tex);
+    Texture diffuse;
+    Texture bump;
+    // load_texture("../resources/siggraph.png", siggraph_tex);
+    load_texture("../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_COL_3K.jpg", diffuse);
+    load_texture("../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg", bump);
 
     Mesh mesh;
     {
         MeshData mesh_data;
-        // load_obj("../resources/meshes/cube.obj", mesh_data);
-        load_obj("../resources/meshes/monkey.obj", mesh_data);
+        load_obj("../resources/meshes/cube.obj", mesh_data);
+        // load_obj("../resources/meshes/monkey.obj", mesh_data);
         mesh_from_mesh_data(mesh_data, mesh);
     }
 
@@ -129,6 +132,8 @@ int main(void)
     VertexAttribs attribs;
     vertex_attribs_append(attribs, 3, GL_FLOAT);
     vertex_attribs_append(attribs, 2, GL_FLOAT);
+    vertex_attribs_append(attribs, 3, GL_FLOAT);
+    vertex_attribs_append(attribs, 3, GL_FLOAT);
     vertex_attribs_append(attribs, 3, GL_FLOAT);
     vertex_attribs_enable_all(attribs, mesh);
 
@@ -179,8 +184,11 @@ int main(void)
 
         shader_set_uniform_3f(shader, "point_light.pos", point_light.pos);
         shader_set_uniform_3f(shader, "point_light.color", point_light.color);
+        shader_set_uniform_1i(shader, "diff_tex", 0);
+        shader_set_uniform_1i(shader, "bump_tex", 1);
         
-        bind_texture(siggraph_tex);
+        bind_texture(diffuse, 0);
+        bind_texture(bump, 1);
         draw_mesh(mesh);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

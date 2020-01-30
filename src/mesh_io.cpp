@@ -126,5 +126,36 @@ void load_obj(const char *filename, MeshData& mesh) {
         mesh.vertices[i].uv     = texcoords.at(vertices[i].uv-1);
         mesh.vertices[i].normal = normals.at(vertices[i].n-1);
     }
+
+    // compute tangent and bitangent vactor for each triangle
+    for (uint32_t i = 0; i < mesh.indices.size(); i+=3)
+    {
+        uint32_t i0 = mesh.indices[i+0];
+        uint32_t i1 = mesh.indices[i+1];
+        uint32_t i2 = mesh.indices[i+2];
+
+        MeshData::Vertex& v0 = mesh.vertices[i0];
+        MeshData::Vertex& v1 = mesh.vertices[i1];
+        MeshData::Vertex& v2 = mesh.vertices[i2];
+
+        glm::vec2 delta_uv0 = v1.uv - v0.uv;
+        glm::vec2 delta_uv1 = v2.uv - v0.uv;
+
+        glm::vec3 edge_0 = v1.pos - v0.pos;
+        glm::vec3 edge_1 = v2.pos - v0.pos;
+
+        float det = 1 / (delta_uv0.x*delta_uv1.y - delta_uv0.y*delta_uv1.x);
+
+        glm::vec3 tangent   = det * ( edge_0 * delta_uv1.y - edge_1 * delta_uv0.y);
+        glm::vec3 bitangent = det * (-edge_0 * delta_uv1.x + edge_1 * delta_uv0.x);
+
+        v0.tangent += tangent;
+        v0.bitangent += bitangent;
+        v1.tangent += tangent;
+        v1.bitangent += bitangent;
+        v2.tangent += tangent;
+        v2.bitangent += bitangent;
+    }
+
     std::cout << " done." << std::endl;
 }

@@ -17,7 +17,7 @@ bool load_texture(const char* file_name, Texture& texture)
     GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
     // load and generate the texture
     int width, height, n_channels;
-    unsigned char *data = stbi_load("../resources/siggraph.png", &width, &height, &n_channels, 0);
+    unsigned char *data = stbi_load(file_name, &width, &height, &n_channels, 0);
     if (data) {
         GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data));
         GLCall(glGenerateMipmap(GL_TEXTURE_2D));
