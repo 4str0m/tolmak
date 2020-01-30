@@ -10,5 +10,5 @@ struct Texture
     uint32_t renderer_id;
 };
 
-bool load_texture(const char* file_name, Texture& texture);
+bool load_texture(Texture& texture, const char* file_name);
 void bind_texture(const Texture& texture, uint32_t slot = 0);

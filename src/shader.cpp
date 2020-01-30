@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-Shader load_shader(const char* filename)
+void load_shader(Shader& shader, const char* filename)
 {
     FILE* shader_file = fopen(filename, "r");
 
@@ -81,7 +81,5 @@ Shader load_shader(const char* filename)
         exit(EXIT_FAILURE);
     }
 
-    Shader shader;
     shader.program = program;
-     return shader;
 }

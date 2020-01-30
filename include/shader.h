@@ -10,7 +10,7 @@ struct Shader
 
 static inline uint32_t shader_finds_loc(Shader& shader, const char* uniform_name);
 
-Shader load_shader(const char* filename);
+void load_shader(Shader& shader, const char* filename);
 
 inline void shader_bind(Shader& shader)
 {

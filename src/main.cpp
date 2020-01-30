@@ -9,8 +9,7 @@
 #include <orbit_camera.h>
 #include <mesh_io.h>
 #include <mesh.h>
-#include <shader.h>
-#include <texture.h>
+#include <material.h>
 #include <light.h>
 
 
@@ -113,11 +112,11 @@ int main(void)
     GLCall(glEnable(GL_CULL_FACE));
     // GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 
-    Texture diffuse, bump, spec;
-    // load_texture("../resources/siggraph.png", siggraph_tex);
-    load_texture("../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_COL_3K.jpg", diffuse);
-    load_texture("../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg", spec);
-    load_texture("../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg", bump);
+    PhongMaterial phong;
+    create_phong_material(phong,
+        "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_COL_3K.jpg",
+        "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg",
+        "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg");
 
     Mesh mesh;
     {
@@ -127,8 +126,6 @@ int main(void)
         mesh_from_mesh_data(mesh_data, mesh);
     }
 
-    Shader shader = load_shader("../resources/shaders/phong.glsl");
- 
     VertexAttribs attribs;
     vertex_attribs_append(attribs, 3, GL_FLOAT);
     vertex_attribs_append(attribs, 2, GL_FLOAT);
@@ -177,20 +174,7 @@ int main(void)
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 mvp = projection * view * model;
 
-        shader_bind(shader);
-        shader_set_uniform_mat4(shader, "MVP", mvp);
-        shader_set_uniform_mat4(shader, "M", model);
-        shader_set_uniform_3f(shader, "EYE", camera._eye);
-
-        shader_set_uniform_3f(shader, "point_light.pos", point_light.pos);
-        shader_set_uniform_3f(shader, "point_light.color", point_light.color);
-        shader_set_uniform_1i(shader, "diff_tex", 0);
-        shader_set_uniform_1i(shader, "spec_tex", 1);
-        shader_set_uniform_1i(shader, "bump_tex", 2);
-        
-        bind_texture(diffuse, 0);
-        bind_texture(spec, 1);
-        bind_texture(bump, 2);
+        use_material(phong, mvp, model, camera._eye, point_light);
         draw_mesh(mesh);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());

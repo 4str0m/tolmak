@@ -5,7 +5,7 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-bool load_texture(const char* file_name, Texture& texture)
+bool load_texture(Texture& texture, const char* file_name)
 {
     uint32_t renderer_id;
     GLCall(glGenTextures(1, &renderer_id));
