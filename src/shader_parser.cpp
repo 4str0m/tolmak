@@ -79,11 +79,12 @@ inline void parse_shader(const char* shader_file_path)
         "Texture"
     };
 
-
     std::stringstream struct_ss;
     std::stringstream use_material_ss;
     std::stringstream create_material_signature_ss;
     std::stringstream create_material_body_ss;
+    std::stringstream imgui_ss;
+
     struct_ss << "struct " << struct_material_name << " {\n"
         "\tShader shader;\n";
     use_material_ss << "inline void use_material(" << struct_material_name << "& material, const glm::mat4& mvp, const glm::mat4& model, const glm::vec3& eye, const PointLight& point_light) {\n"
@@ -98,6 +99,9 @@ inline void parse_shader(const char* shader_file_path)
         << struct_material_name << "& material";
     create_material_body_ss << "{\n"
         "\tload_shader(material.shader, \"" << shader_file_path << "\");\n";
+
+    imgui_ss << "inline void " << material_name << "_material_imgui(" << struct_material_name << "& material)\n{\n"
+        "\tImGui::Begin(\"" << struct_material_name << "\");\n";
 
     char line[512];
     char line_bk[512] = {0};
@@ -136,9 +140,10 @@ inline void parse_shader(const char* shader_file_path)
         {
             if (!strncmp(type, uniform_type_names[i], type_len))
             {
-                struct_ss << "\t" << uniform_type_cpp[i] << " " << variable_name << ";\n";
+                struct_ss << "\t" << uniform_type_cpp[i] << " " << variable_name;
                 if (i == SAMPLER2D)
                 {
+                    struct_ss << ";\n";
                     use_material_ss << "\t"
                         << set_uniform_prefix << uniform_type_function_postfix[i]
                         << "(material.shader, \"" << variable_name << "\", " << texture_id << ");\n"
@@ -150,9 +155,18 @@ inline void parse_shader(const char* shader_file_path)
                 }
                 else
                 {
+                    struct_ss << "= " << uniform_type_cpp[i] << "(0.f);\n";
                     use_material_ss << "\t"
                         << set_uniform_prefix << uniform_type_function_postfix[i]
                         << "(material.shader, \"" << variable_name << "\", material." << variable_name << ");\n";
+                }
+                if (i <= VEC4) {
+                    const char* imgui_func = i == VEC3 ? "ImGui::ColorEdit" : "ImGui::SliderFloat";
+                    imgui_ss << "\t" << imgui_func;
+                    if (i != 0) imgui_ss << (i+1);
+                    imgui_ss << "(\"" << variable_name << "\", (float*)&material." << variable_name;
+                    if (i == VEC3) imgui_ss << ");\n";
+                    else imgui_ss << ", 0.f, 1.f);\n";
                 }
                 break;
             }
@@ -162,10 +176,12 @@ inline void parse_shader(const char* shader_file_path)
     use_material_ss << "}\n";
     create_material_signature_ss << ")\n";
     create_material_body_ss << "}\n";
+    imgui_ss << "\tImGui::End();\n}\n";
 
     std::cout << struct_ss.str() << std::endl;
     std::cout << use_material_ss.str() << std::endl;
     std::cout << create_material_signature_ss.str() << create_material_body_ss.str() << std::endl;
+    std::cout << imgui_ss.str() << std::endl;
 }
 
 int main(int argc, char const *argv[])

@@ -129,7 +129,7 @@ add_executable(tolmak
   ext/glad/src/glad.c
   ${imgui_SRC}
 
-  resources/shaders/phong.glsl
+  ${shader_SRC}
 )
 
 target_link_libraries(tolmak glfw)

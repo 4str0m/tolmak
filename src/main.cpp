@@ -118,8 +118,6 @@ int main(void)
         "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg",
         "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg");
 
-    phong.tint = glm::vec3(1.f, 0.f, 0.f);
-
     Mesh mesh;
     {
         MeshData mesh_data;
@@ -167,6 +165,7 @@ int main(void)
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
+        phong_material_imgui(phong);
         // Rendering
         ImGui::Render();
 
