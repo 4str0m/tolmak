@@ -5,6 +5,7 @@
 #include <texture.h>
 #include <light.h>
 
+
 struct PhongMaterial
 {
     Shader shader;
@@ -27,9 +28,9 @@ inline void use_material(PhongMaterial& material, const glm::mat4& mvp, const gl
     shader_set_uniform_mat4(material.shader, "MVP", mvp);
     shader_set_uniform_mat4(material.shader, "M", model);
     shader_set_uniform_3f(material.shader, "EYE", eye);
-
     shader_set_uniform_3f(material.shader, "point_light.pos", point_light.pos);
     shader_set_uniform_3f(material.shader, "point_light.color", point_light.color);
+
     shader_set_uniform_1i(material.shader, "diff_tex", 0);
     shader_set_uniform_1i(material.shader, "spec_tex", 1);
     shader_set_uniform_1i(material.shader, "bump_tex", 2);

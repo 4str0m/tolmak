@@ -100,6 +100,19 @@ file(GLOB imgui_SRC
     ext/imgui/examples/imgui_impl_opengl3.cpp
 )
 
+file(GLOB shader_SRC
+  ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/*.glsl
+)
+
+execute_process(
+  COMMAND clang++-6.0 ../src/shader_parser.cpp -o shader_parser
+)
+
+execute_process(
+  COMMAND ./shader_parser ${shader_SRC}
+  OUTPUT_FILE ../include/materials.h
+)
+
 add_executable(tolmak
   src/main.cpp
 
@@ -108,12 +121,15 @@ add_executable(tolmak
   src/texture.cpp include/texture.h
   include/orbit_camera.h
   include/mesh.h
-  include/material.h
+  # include/material.h
+  include/materials.h
   include/light.h
   include/common.h
 
   ext/glad/src/glad.c
   ${imgui_SRC}
+
+  resources/shaders/phong.glsl
 )
 
 target_link_libraries(tolmak glfw)

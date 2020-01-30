@@ -1,17 +1,4 @@
-
 // #VERTEX#
-
-#version 460
-
-uniform mat4 MVP;
-uniform mat4 M;
-uniform vec3 EYE;
-
-struct PointLight {
-    vec3 pos;
-    vec3 color;
-};
-uniform PointLight point_light;
 
 layout (location = 0) in vec3 vPos;
 layout (location = 1) in vec2 vUV;
@@ -47,8 +34,6 @@ void main()
 
 // #FRAGMENT#
 
-#version 460
-
 in vec3 position;
 in vec3 tangent_position;
 in vec2 uv;
@@ -66,6 +51,8 @@ uniform sampler2D diff_tex;
 uniform sampler2D spec_tex;
 uniform sampler2D bump_tex;
 
+uniform vec3 tint;
+
 void main()
 {
     vec3 normal = texture(bump_tex, uv).rgb;
@@ -78,7 +65,7 @@ void main()
 
     vec3 pos_to_light = normalize(tangent_point_light.pos - tangent_position);
     float diff = max(dot(pos_to_light, normal), 0.0f);
-    vec3 diffuse = diff * object_color * tangent_point_light.color;
+    vec3 diffuse = diff * object_color * tangent_point_light.color * tint;
 
     vec3 pos_to_camera = normalize(tangent_camera_pos - tangent_position);
     float spec = clamp(dot(reflect(-pos_to_light, normal), pos_to_camera), 0.0f, 1.0f);

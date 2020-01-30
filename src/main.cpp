@@ -9,7 +9,7 @@
 #include <orbit_camera.h>
 #include <mesh_io.h>
 #include <mesh.h>
-#include <material.h>
+#include <materials.h>
 #include <light.h>
 
 
@@ -117,6 +117,8 @@ int main(void)
         "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_COL_3K.jpg",
         "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg",
         "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg");
+
+    phong.tint = glm::vec3(1.f, 0.f, 0.f);
 
     Mesh mesh;
     {

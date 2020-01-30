@@ -2,6 +2,18 @@
 
 #include <sstream>
 
+static const char* common_uniforms =
+"#version 460\n"
+
+"uniform mat4 MVP;\n"
+"uniform mat4 M;\n"
+"uniform vec3 EYE;\n"
+"struct PointLight {\n"
+"    vec3 pos;\n"
+"    vec3 color;\n"
+"};\n"
+"uniform PointLight point_light;\n";
+
 void load_shader(Shader& shader, const char* filename)
 {
     FILE* shader_file = fopen(filename, "r");
@@ -25,7 +37,9 @@ void load_shader(Shader& shader, const char* filename)
         GL_GEOMETRY_SHADER
     };
 
-    std::stringstream sources[STATE_COUNT];    
+    std::stringstream sources[STATE_COUNT];
+    for (int i = 0; i < STATE_COUNT; ++i)
+        sources[i] << common_uniforms;
 
     State state = NONE;
 
@@ -33,7 +47,7 @@ void load_shader(Shader& shader, const char* filename)
     size_t len = 512;
     bool has_geometry_shader = false;
     while (fgets(line, len, shader_file) != nullptr) {
-        if      (strstr(line, "#VERTEX#"))         state = VERT;
+        if      (strstr(line, "#VERTEX#"))       state = VERT;
         else if (strstr(line, "#FRAGMENT#"))     state = FRAG;
         else if (strstr(line, "#GEOMETRY#")) {
             state = GEOM;

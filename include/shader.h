@@ -45,6 +45,16 @@ inline void shader_set_uniform_4f(Shader& shader, const char* uniform_name, cons
     GLCall(glUniform4f(loc, v.x, v.y, v.z, v.w));
 }
 
+inline void shader_set_uniform_mat2(Shader& shader, const char* uniform_name, const glm::mat2& v)
+{
+    uint32_t loc = shader_finds_loc(shader, uniform_name);
+    GLCall(glUniformMatrix2fv(loc, 1, GL_FALSE, glm::value_ptr(v)));
+}
+inline void shader_set_uniform_mat3(Shader& shader, const char* uniform_name, const glm::mat3& v)
+{
+    uint32_t loc = shader_finds_loc(shader, uniform_name);
+    GLCall(glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(v)));
+}
 inline void shader_set_uniform_mat4(Shader& shader, const char* uniform_name, const glm::mat4& v)
 {
     uint32_t loc = shader_finds_loc(shader, uniform_name);
