@@ -100,19 +100,6 @@ file(GLOB imgui_SRC
     ext/imgui/examples/imgui_impl_opengl3.cpp
 )
 
-file(GLOB shader_SRC
-  ${CMAKE_CURRENT_SOURCE_DIR}/resources/shaders/*.glsl
-)
-
-execute_process(
-  COMMAND clang++-6.0 ../src/shader_parser.cpp -o shader_parser
-)
-
-execute_process(
-  COMMAND ./shader_parser ${shader_SRC}
-  OUTPUT_FILE ../include/materials.h
-)
-
 add_executable(tolmak
   src/main.cpp
 
@@ -128,8 +115,6 @@ add_executable(tolmak
 
   ext/glad/src/glad.c
   ${imgui_SRC}
-
-  ${shader_SRC}
 )
 
 target_link_libraries(tolmak glfw)

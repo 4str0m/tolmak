@@ -43,7 +43,7 @@ inline void use_material(
 
 inline void create_material(LightMaterial& material)
 {
-    load_shader(material.shader, "/home/benoit/Desktop/cpp/tolmak/resources/shaders/light.glsl");
+    load_shader(material.shader, "../resources/shaders/light.glsl");
 }
 
 
@@ -103,7 +103,7 @@ inline void use_material(
 
 inline void create_material(PhongMaterial& material)
 {
-    load_shader(material.shader, "/home/benoit/Desktop/cpp/tolmak/resources/shaders/phong.glsl");
+    load_shader(material.shader, "../resources/shaders/phong.glsl");
 }
 
 

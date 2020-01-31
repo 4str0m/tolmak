@@ -377,9 +377,8 @@ int main(int argc, char const *argv[])
     }
 
     std::cout << file_header;
-
-    for (int i = 1; i < argc; ++i) {
+    for (int i = 1; i < argc; ++i)
         parse_shader(argv[i]);
-    }
+
     return 0;
 }
