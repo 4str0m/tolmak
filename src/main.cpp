@@ -1,5 +1,3 @@
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
 
 #include <imgui.h>
 #include <examples/imgui_impl_glfw.h>
@@ -22,6 +20,7 @@ OrbitCamera camera = {
 };
 
 static MouseState mouse_state;
+static KeyboardState keyboard_state;
 
 static void error_callback(int error, const char* description)
 {
@@ -32,6 +31,9 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+
+    keyboard_state.action[key] = action;
+    keyboard_state.mods[key] = mods;
 }
 
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
@@ -45,13 +47,12 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
 	camera_handle_mouse_move(camera, mouse_state);
 }
 
-static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
-{
-	mouse_state.buttons[button] = action == GLFW_PRESS;
+static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
+	mouse_state.action[button] = action;
+    mouse_state.mods[button] = mods;
 }
 
-static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
-{
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
 	camera_handle_scroll(camera, xoffset, yoffset);
 }
 
@@ -134,12 +135,14 @@ int main(void)
 
     while (!glfwWindowShouldClose(window))
     {
+        camera_update(camera, keyboard_state);
+
         float aspect_ratio;
         int width, height;
         glfwGetFramebufferSize(window, &width, &height);
         aspect_ratio = width / (float) height;
  
-        float time = (float)glfwGetTime();
+        float time = (float)0.f; //glfwGetTime();
         float r = 3.f;
         point_lights[0].pos = glm::vec3(r * sin(time), 0.f, r * cos(time));
         point_lights[1].pos = glm::vec3(r * sin(time + PI), 0.f, r * cos(time + PI));

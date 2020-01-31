@@ -14,7 +14,8 @@ struct OrbitCamera
     float far;
 
     bool must_recompute_eye = true;
-    glm::vec3 _eye = glm::vec3(0.f, 0.f, 0.f);
+    glm::vec3 _eye = glm::vec3(0.f);
+    float speed = 0.1f;
 };
 
 inline glm::mat4 get_projection_matrix(const OrbitCamera& camera)
@@ -30,10 +31,27 @@ inline glm::mat4 get_view_matrix(OrbitCamera& camera)
         float sin_phi = std::sin(camera.phi);
         float cos_phi = std::cos(camera.phi);
 
-        camera._eye = glm::vec3(cos_theta * cos_phi, sin_theta, cos_theta * sin_phi) * camera.distance_to_target;
+        camera._eye = camera.target + glm::vec3(cos_theta * cos_phi, sin_theta, cos_theta * sin_phi) * camera.distance_to_target;
         camera.must_recompute_eye = false;
     }
     return glm::lookAt(camera._eye, camera.target, glm::vec3(0.f, 1.f, 0.f));
+}
+
+inline void camera_update(OrbitCamera& camera, const KeyboardState &keyboard_state)
+{
+    if (keyboard_state.action[GLFW_KEY_UP]) {
+        glm::vec3 forward = glm::normalize(camera.target - camera._eye);
+        camera.must_recompute_eye = true;
+        camera.target += forward * camera.speed;
+    }
+
+    if (keyboard_state.action[GLFW_KEY_DOWN])
+    {
+        glm::vec3 forward = glm::normalize(camera.target - camera._eye);
+        // glm::vec3 left = glm::cross(glm::vec3(0.f, 1.f, 0.f), forward);
+        camera.must_recompute_eye = true;
+        camera.target -= forward * camera.speed;
+    }
 }
 
 inline void camera_handle_scroll(OrbitCamera& camera, double xoffset, double yoffset)
@@ -43,7 +61,7 @@ inline void camera_handle_scroll(OrbitCamera& camera, double xoffset, double yof
 }
 inline void camera_handle_mouse_move(OrbitCamera& camera, MouseState mouse_state)
 {
-    if (mouse_state.buttons[GLFW_MOUSE_BUTTON_MIDDLE])
+    if (mouse_state.action[GLFW_MOUSE_BUTTON_MIDDLE] == GLFW_PRESS)
     {
         camera.theta = glm::clamp(camera.theta + mouse_state.dy * .01f, -HALF_PI + .01f, HALF_PI - .01f);
         camera.phi   = camera.phi + mouse_state.dx * .01f;

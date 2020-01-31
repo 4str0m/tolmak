@@ -1,5 +1,8 @@
 #pragma once
 
+#define GLFW_INCLUDE_NONE
+#include <GLFW/glfw3.h>
+
 #include <glad/glad.h>
 
 #include <glm/glm.hpp>
@@ -31,7 +34,14 @@ struct MouseState
 {
     float x, y;
     float dx, dy;
-    bool buttons[3];
+    int action[GLFW_MOUSE_BUTTON_LAST];
+    int mods[GLFW_MOUSE_BUTTON_LAST];
+};
+
+struct KeyboardState
+{
+    int action[GLFW_KEY_LAST];
+    int mods[GLFW_KEY_LAST];
 };
 
 inline void GL_clear_errors() { while(glGetError()); }
