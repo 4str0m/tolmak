@@ -219,6 +219,8 @@ inline void parse_shader(const char* shader_file_path)
     fprintf(outputs[USE_MATERIAL], use_material_fmt, struct_material_name);
     fprintf(outputs[IMGUI], imgui_fmt, struct_material_name, struct_material_name);
 
+    bool has_non_trivial_imgui = false;
+
     char line[512];
     char line_bk[512] = {0};
     size_t len = 512;
@@ -322,11 +324,13 @@ inline void parse_shader(const char* shader_file_path)
                                 variable_name,
                                 0, 1
                             );
-                        } else if (i == VEC3 && has_custom_param && custom_param.type == UniformCustomParameter::Type::COLOR) {
+                            has_non_trivial_imgui = true;
+                       } else if (i == VEC3 && has_custom_param && custom_param.type == UniformCustomParameter::Type::COLOR) {
                             fprintf(outputs[IMGUI], imgui_color3_variable_fmt,
                                 variable_name,
                                 variable_name
                             );
+                            has_non_trivial_imgui = true;
                         } else if (IS_FLOAT(i)) {
                             float min = 0.f, max = 1.f;
                             if (has_custom_param && custom_param.type == UniformCustomParameter::Type::RANGE) {
@@ -340,6 +344,7 @@ inline void parse_shader(const char* shader_file_path)
                                 variable_name,
                                 min, max
                             );
+                            has_non_trivial_imgui = true;
                         }
                     }
                 }
@@ -362,7 +367,10 @@ inline void parse_shader(const char* shader_file_path)
     for (int i = 0; i < CODE_ELEMENTS_COUNT; ++i)
     {
         fflush(outputs[i]);
-        std::cout << buffers[i] << std::endl;
+        if (i != IMGUI || has_non_trivial_imgui)
+            std::cout << buffers[i] << std::endl;
+        else
+            std::cout << "inline void material_imgui(" << struct_material_name << "& material) {}" << std::endl;
         fclose(outputs[i]);
         free(buffers[i]);
     }

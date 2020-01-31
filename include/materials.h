@@ -46,13 +46,7 @@ inline void create_material(LightMaterial& material)
     load_shader(material.shader, "../resources/shaders/light.glsl");
 }
 
-
-inline void material_imgui(LightMaterial& material)
-{
-    ImGui::Begin("LightMaterial");
-    ImGui::End();
-}
-
+inline void material_imgui(LightMaterial& material) {}
 
 struct PhongMaterial {
     Shader shader;
