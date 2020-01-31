@@ -50,6 +50,9 @@ void load_shader(Shader& shader, const char* filename)
     size_t len = 512;
     bool has_geometry_shader = false;
     while (fgets(line, len, shader_file) != nullptr) {
+        if (line[0] == '%')
+            continue;
+
         if      (strstr(line, "#VERTEX#"))       state = VERT;
         else if (strstr(line, "#FRAGMENT#"))     state = FRAG;
         else if (strstr(line, "#GEOMETRY#")) {

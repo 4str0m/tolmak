@@ -50,7 +50,7 @@ inline void create_material(LightMaterial& material)
 inline void material_imgui(LightMaterial& material)
 {
     ImGui::Begin("LightMaterial");
-    ImGui::SliderInt("light_index", (int*)&material.light_index, 0, 1);
+    ImGui::End();
 }
 
 
@@ -110,18 +110,22 @@ inline void create_material(PhongMaterial& material)
 inline void material_imgui(PhongMaterial& material)
 {
     ImGui::Begin("PhongMaterial");
-    ImGui::SliderFloat("uv_scale", (float*)&material.uv_scale, 0, 1);
+    ImGui::SliderFloat("uv_scale", (float*)&material.uv_scale, 0.100000, 10.000000);
     ImGui::AlignTextToFramePadding();
     ImGui::Text("diff_tex");
-    ImGui::Image((void*)(intptr_t)textures[material.diff_tex].renderer_id, ImVec2(70, 70));
+    ImGui::SameLine();
+    ImGui::Image((void*)(intptr_t)textures[material.diff_tex].renderer_id, ImVec2(20, 20));
     ImGui::AlignTextToFramePadding();
     ImGui::Text("spec_tex");
-    ImGui::Image((void*)(intptr_t)textures[material.spec_tex].renderer_id, ImVec2(70, 70));
+    ImGui::SameLine();
+    ImGui::Image((void*)(intptr_t)textures[material.spec_tex].renderer_id, ImVec2(20, 20));
     ImGui::AlignTextToFramePadding();
     ImGui::Text("bump_tex");
-    ImGui::Image((void*)(intptr_t)textures[material.bump_tex].renderer_id, ImVec2(70, 70));
-    ImGui::SliderFloat3("tint", (float*)&material.tint, 0, 1);
-    ImGui::SliderFloat("specularity", (float*)&material.specularity, 0, 1);
-    ImGui::SliderFloat("bump_strength", (float*)&material.bump_strength, 0, 1);
+    ImGui::SameLine();
+    ImGui::Image((void*)(intptr_t)textures[material.bump_tex].renderer_id, ImVec2(20, 20));
+    ImGui::ColorEdit3("tint", (float*)&material.tint);
+    ImGui::SliderFloat("specularity", (float*)&material.specularity, 0.000000, 1.000000);
+    ImGui::SliderFloat("bump_strength", (float*)&material.bump_strength, 0.000000, 1.000000);
+    ImGui::End();
 }
 

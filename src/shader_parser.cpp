@@ -18,6 +18,133 @@ const char* file_header = R"(
 
 )";
 
+
+enum UniformType
+{
+    INT,
+    FLOAT, VEC2, VEC3, VEC4,
+    MAT2, MAT3, MAT4,
+    SAMPLER2D,
+
+    UNIFORM_TYPE_COUNT
+};
+
+#define IS_FLOAT(x) ((x) == FLOAT || (x) == VEC2 || (x) == VEC3 || (x) == VEC4)
+
+struct UniformTemplate
+{
+    const char* opengl_type;
+    const char* cpp_type;
+    const char* cpp_default_value;
+    const char* opengl_function_postfix;
+    const char* imgui_function;
+    const char* underlying_type;
+};
+
+const UniformTemplate uniform_templates[UNIFORM_TYPE_COUNT] = {
+    {"int", "int", " = 0", "1i", "SliderInt", "int"},
+    
+    {"float", "float", " = 0.f", "1f", "SliderFloat", "float"},
+    {"vec2", "glm::vec2", " = glm::vec2(0.f)", "2f", "SliderFloat2", "float"},
+    {"vec3", "glm::vec3", " = glm::vec3(0.f)", "3f", "SliderFloat3", "float"},
+    {"vec4", "glm::vec4", " = glm::vec4(0.f)", "4f", "SliderFloat4", "float"},
+
+    {"mat2", "glm::mat2", " = glm::mat2(0.f)", "mat2", nullptr, "float"},
+    {"mat3", "glm::mat3", " = glm::mat3(0.f)", "mat3", nullptr, "float"},
+    {"mat4", "glm::mat4", " = glm::mat4(0.f)", "mat4", nullptr, "float"},
+    
+    {"sampler2D", "uint32_t", "", "1i", nullptr, ""}
+};
+
+const char* use_material_fmt = R"(
+inline void use_material(
+    %s& material,
+    const glm::mat4& mvp,
+    const glm::mat4& model,
+    const glm::vec3& eye
+)
+{
+    shader_bind(material.shader);
+    shader_set_uniform_mat4(material.shader, "MVP", mvp);
+    shader_set_uniform_mat4(material.shader, "M", model);
+    shader_set_uniform_3f(material.shader, "EYE", eye);
+
+    const char* point_light_pos_fmt = "point_lights[%%u].pos";
+    const char* point_light_col_fmt = "point_lights[%%u].color";
+    char point_light_pos[256];
+    char point_light_col[256];
+    for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
+        snprintf(point_light_pos, 256, point_light_pos_fmt, i);
+        snprintf(point_light_col, 256, point_light_col_fmt, i);
+        shader_set_uniform_3f(material.shader, point_light_pos, point_lights[i].pos);
+        shader_set_uniform_3f(material.shader, point_light_col, point_lights[i].color);
+    })";
+
+const char* use_material_sampler_fmt = R"(
+    shader_set_uniform_1i(material.shader, "%s", %d);
+    bind_texture(material.%s, %d);)";
+
+const char* use_material_variable_fmt = R"(
+    shader_set_uniform_%s(material.shader, "%s", material.%s);)";
+
+const char* create_material_fmt = R"(
+inline void create_material(%s& material)
+{
+    load_shader(material.shader, "%s");
+}
+)";
+
+const char* struct_fmt = R"(
+struct %s {
+    Shader shader;)";
+    
+    const char* struct_field_fmt = R"(
+    %s %s%s;)";
+
+const char* imgui_fmt = R"(
+inline void material_imgui(%s& material)
+{
+    ImGui::Begin("%s");)";
+
+const char* imgui_sampler_fmt = R"(
+    ImGui::AlignTextToFramePadding();
+    ImGui::Text("%s");
+    ImGui::SameLine();
+    ImGui::Image((void*)(intptr_t)textures[material.%s].renderer_id, ImVec2(20, 20));)";
+
+const char* imgui_float_variable_fmt = R"(
+    ImGui::%s("%s", (%s*)&material.%s, %f, %f);)";
+const char* imgui_int_variable_fmt = R"(
+    ImGui::%s("%s", (%s*)&material.%s, %d, %d);)";
+
+const char* imgui_color3_variable_fmt = R"(
+    ImGui::ColorEdit3("%s", (float*)&material.%s);)";
+
+
+struct UniformCustomParameter
+{
+    enum Type
+    {
+        NONE = -1,
+        HIDE,
+        RANGE,
+        COLOR
+    };
+
+    union Data
+    {
+        struct {
+            float min, max;
+        } range_boundaries;
+    };
+
+    Type type;
+    Data data;
+};
+
+UniformCustomParameter custom_param = { UniformCustomParameter::Type::NONE };
+bool has_custom_param = false;
+
 inline void parse_shader(const char* shader_file_path)
 {
     FILE* shader_file = fopen(shader_file_path, "r");
@@ -65,117 +192,6 @@ inline void parse_shader(const char* shader_file_path)
     }
     *t = '\0';
 
-    enum UniformType
-    {
-        INT,
-        FLOAT, VEC2, VEC3, VEC4,
-        MAT2, MAT3, MAT4,
-        SAMPLER2D,
-
-        UNIFORM_TYPE_COUNT
-    };
-
-    const char* uniform_type_names[UNIFORM_TYPE_COUNT] = {
-        "int",
-        "float", "vec2", "vec3", "vec4",
-        "mat2", "mat3", "mat4",
-        "sampler2D"
-    };
-
-    const char* set_uniform_prefix = "shader_set_uniform_";
-    const char* uniform_type_function_postfix[UNIFORM_TYPE_COUNT] = {
-        "1i",
-        "1f", "2f", "3f", "4f",
-        "mat2", "mat3", "mat4",
-        "1i"
-    };
-
-    const char* uniform_type_cpp[UNIFORM_TYPE_COUNT] = {
-        "int",
-        "float", "glm::vec2", "glm::vec3", "glm::vec4",
-        "glm::mat2", "glm::mat3", "glm::mat4",
-        "uint32_t"
-    };
-
-    const char* uniform_imgui[UNIFORM_TYPE_COUNT] = {
-        "SliderInt",
-        "SliderFloat", "SliderFloat2", "SliderFloat3", "SliderFloat4",
-        nullptr, nullptr, nullptr,
-        nullptr
-    };
-
-    const char* uniform_default_value[UNIFORM_TYPE_COUNT] = {
-        " = 0",
-        " = 0.f", " = glm::vec2(0.f)", " = glm::vec3(0.f)", " = glm::vec4(0.f)",
-        " = glm::mat2(0.f)", " = glm::mat3(0.f)", " = glm::mat4(0.f)",
-        ""
-    };
-
-    const char* uniform_underlying_type[UNIFORM_TYPE_COUNT] = {
-        "int",
-        "float", "float", "float", "float", 
-        "float", "float", "float",
-        ""
-    };
-
-    const char* use_material_fmt = R"(
-inline void use_material(
-    %s& material,
-    const glm::mat4& mvp,
-    const glm::mat4& model,
-    const glm::vec3& eye
-)
-{
-    shader_bind(material.shader);
-    shader_set_uniform_mat4(material.shader, "MVP", mvp);
-    shader_set_uniform_mat4(material.shader, "M", model);
-    shader_set_uniform_3f(material.shader, "EYE", eye);
-
-    const char* point_light_pos_fmt = "point_lights[%%u].pos";
-    const char* point_light_col_fmt = "point_lights[%%u].color";
-    char point_light_pos[256];
-    char point_light_col[256];
-    for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
-        snprintf(point_light_pos, 256, point_light_pos_fmt, i);
-        snprintf(point_light_col, 256, point_light_col_fmt, i);
-        shader_set_uniform_3f(material.shader, point_light_pos, point_lights[i].pos);
-        shader_set_uniform_3f(material.shader, point_light_col, point_lights[i].color);
-    })";
-
-    const char* use_material_sampler_fmt = R"(
-    shader_set_uniform_1i(material.shader, "%s", %d);
-    bind_texture(material.%s, %d);)";
-
-    const char* use_material_variable_fmt = R"(
-    shader_set_uniform_%s(material.shader, "%s", material.%s);)";
-
-    const char* create_material_fmt = R"(
-inline void create_material(%s& material)
-{
-    load_shader(material.shader, "%s");
-}
-)";
-
-    const char* struct_fmt = R"(
-struct %s {
-    Shader shader;)";
-    
-    const char* struct_field_fmt = R"(
-    %s %s%s;)";
-
-    const char* imgui_fmt = R"(
-inline void material_imgui(%s& material)
-{
-    ImGui::Begin("%s");)";
-
-    const char* imgui_sampler_fmt = R"(
-    ImGui::AlignTextToFramePadding();
-    ImGui::Text("%s");
-    ImGui::Image((void*)(intptr_t)textures[material.%s].renderer_id, ImVec2(70, 70));)";
-
-    const char* imgui_variable_fmt = R"(
-    ImGui::%s("%s", (%s*)&material.%s, 0, 1);)";
-
     enum CodeElements
     {
         STRUCT,
@@ -210,6 +226,38 @@ inline void material_imgui(%s& material)
     while (fgets(line, len, shader_file) != nullptr) {
 
         strncpy(line_bk, line, len);
+
+        // if it's a custom command
+        if (line[0] == '%') {
+            char* rest = line + 1;
+            if (!strncmp(rest, "Range", 5)) {
+                float min, max;
+                if (2 != sscanf(rest, "Range(%f, %f)", &min, &max)) {
+                    std::cout << "ERROR: bad formatting of custom uniform parameter (Range): " << line_bk << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                has_custom_param = true;
+                custom_param.type = UniformCustomParameter::Type::RANGE;
+                custom_param.data.range_boundaries.min = min;
+                custom_param.data.range_boundaries.max = max;
+            } else if (!strncmp(rest, "Color()", 7)) {
+                if (rest[7] != '\n') {
+                    std::cout << "ERROR: bad formatting of custom uniform parameter (Color): " << line_bk << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                has_custom_param = true;
+                custom_param.type = UniformCustomParameter::Type::COLOR;
+            } else if (!strncmp(rest, "Hide()", 6)) {
+                if (rest[6] != '\n') {
+                    std::cout << "ERROR: bad formatting of custom uniform parameter (Hide): " << line_bk << std::endl;
+                    exit(EXIT_FAILURE);
+                }
+                has_custom_param = true;
+                custom_param.type = UniformCustomParameter::Type::HIDE;
+            }
+            continue;
+        }
+
         // only care about uniforms
         if (strncmp(line, "uniform ", 8))
             continue;
@@ -241,18 +289,59 @@ inline void material_imgui(%s& material)
         bool found_uniform = false;
         for (uint32_t i = 0; i < UNIFORM_TYPE_COUNT; ++i)
         {
-            if (!strncmp(type, uniform_type_names[i], type_len))
+            const UniformTemplate& uniform_template = uniform_templates[i];
+            if (!strncmp(type, uniform_template.opengl_type, type_len))
             {
+                if (has_custom_param) {
+                    if (custom_param.type == UniformCustomParameter::Type::COLOR && i != VEC3) {
+                        std::cout << "ERROR: invalid combination of uniform type and custom param: " << line_bk << std::endl;
+                        exit(EXIT_FAILURE);
+                    }
+                    else if (custom_param.type == UniformCustomParameter::Type::RANGE &&
+                        !IS_FLOAT(i)) {
+                        std::cout << "ERROR: invalid combination of uniform type and custom param: " << line_bk << std::endl;
+                        exit(EXIT_FAILURE);
+                    }
+                }
 
-                fprintf(outputs[STRUCT], struct_field_fmt, uniform_type_cpp[i], variable_name, uniform_default_value[i]);
+                fprintf(outputs[STRUCT], struct_field_fmt, uniform_template.cpp_type, variable_name, uniform_template.cpp_default_value);
                 if (i == SAMPLER2D) {
                     fprintf(outputs[USE_MATERIAL], use_material_sampler_fmt, variable_name, texture_id, variable_name, texture_id);
                     fprintf(outputs[IMGUI], imgui_sampler_fmt, variable_name, variable_name);
                     texture_id++;
                 }
                 else {
-                    fprintf(outputs[USE_MATERIAL], use_material_variable_fmt, uniform_type_function_postfix[i], variable_name, variable_name);
-                    fprintf(outputs[IMGUI], imgui_variable_fmt, uniform_imgui[i], variable_name, uniform_underlying_type[i], variable_name);
+                    fprintf(outputs[USE_MATERIAL], use_material_variable_fmt, uniform_template.opengl_function_postfix, variable_name, variable_name);
+    
+                    if (uniform_template.imgui_function && !(has_custom_param && custom_param.type == UniformCustomParameter::Type::HIDE)) {
+                        if (i == INT) {
+                            fprintf(outputs[IMGUI], imgui_int_variable_fmt,
+                                uniform_template.imgui_function,
+                                variable_name,
+                                uniform_template.underlying_type,
+                                variable_name,
+                                0, 1
+                            );
+                        } else if (i == VEC3 && has_custom_param && custom_param.type == UniformCustomParameter::Type::COLOR) {
+                            fprintf(outputs[IMGUI], imgui_color3_variable_fmt,
+                                variable_name,
+                                variable_name
+                            );
+                        } else if (IS_FLOAT(i)) {
+                            float min = 0.f, max = 1.f;
+                            if (has_custom_param && custom_param.type == UniformCustomParameter::Type::RANGE) {
+                                min = custom_param.data.range_boundaries.min;
+                                max = custom_param.data.range_boundaries.max;
+                            }
+                            fprintf(outputs[IMGUI], imgui_float_variable_fmt,
+                                uniform_template.imgui_function,
+                                variable_name,
+                                uniform_template.underlying_type,
+                                variable_name,
+                                min, max
+                            );
+                        }
+                    }
                 }
 
                 found_uniform = true;
@@ -264,8 +353,9 @@ inline void material_imgui(%s& material)
             std::cout << "ERROR: invalid uniform type: " << line_bk << std::endl;
             exit(EXIT_FAILURE);
         }
+        has_custom_param = false;
     }
-    fprintf(outputs[IMGUI], "\n}\n");
+    fprintf(outputs[IMGUI], "\n    ImGui::End();\n}\n");
     fprintf(outputs[STRUCT], "\n};\n");
     fprintf(outputs[USE_MATERIAL], "\n}\n");
 

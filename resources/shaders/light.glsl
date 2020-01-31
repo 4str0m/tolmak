@@ -12,6 +12,8 @@ void main()
 // #FRAGMENT#
 
 out vec4 output_color;
+
+%Hide()
 uniform int light_index;
 
 void main()

@@ -164,9 +164,6 @@ int main(void)
             ImGui::SliderFloat3("Light pos", (float*)&point_lights[light_index].pos, -10.f, 10.f);
             ImGui::ColorEdit3("Light color", (float*)&point_lights[light_index].color);
 
-            ImGui::Text("pointer = %p", phong.diff_tex);
-            ImGui::Image((void*)(intptr_t)phong.diff_tex, ImVec2(100, 100));
-
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
