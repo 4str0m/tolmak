@@ -5,7 +5,9 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-bool load_texture(Texture& texture, const char* file_name)
+std::vector<Texture> textures;
+
+bool load_texture(uint32_t* texture_id, const char* file_name)
 {
     uint32_t renderer_id;
     GLCall(glGenTextures(1, &renderer_id));
@@ -26,15 +28,14 @@ bool load_texture(Texture& texture, const char* file_name)
         return false;
     }
     stbi_image_free(data);
-    texture.width = width;
-    texture.height = height;
-    texture.n_channels = n_channels;
-    texture.renderer_id = renderer_id;
+
+    textures.push_back({width, height, n_channels, renderer_id});
+    *texture_id = textures.size()-1;
     return true;
 }
 
-void bind_texture(const Texture& texture, uint32_t slot)
+void bind_texture(uint32_t texture_id, uint32_t slot)
 {
     GLCall(glActiveTexture(GL_TEXTURE0 + slot));
-    GLCall(glBindTexture(GL_TEXTURE_2D, texture.renderer_id));
+    GLCall(glBindTexture(GL_TEXTURE_2D, textures[texture_id].renderer_id));
 }

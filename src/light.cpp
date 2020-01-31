@@ -30,7 +30,7 @@ void init_lights()
 }
 void draw_lights(const glm::mat4& vp)
 {
-    for (int i = 0; i < N_POINT_LIGHTS; ++i)
+    for (uint32_t i = 0; i < N_POINT_LIGHTS; ++i)
     {
         if (point_lights[i].color == glm::vec3(0.f))
             continue;

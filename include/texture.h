@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <vector>
 
 struct Texture
 {
@@ -10,5 +11,7 @@ struct Texture
     uint32_t renderer_id;
 };
 
-bool load_texture(Texture& texture, const char* file_name);
-void bind_texture(const Texture& texture, uint32_t slot = 0);
+extern std::vector<Texture> textures;
+
+bool load_texture(uint32_t* texture_id, const char* file_name);
+void bind_texture(uint32_t texture_id, uint32_t slot = 0);

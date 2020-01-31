@@ -109,10 +109,10 @@ int main(void)
     // GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 
     PhongMaterial phong;
-    create_material(phong,
-        "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_COL_3K.jpg",
-        "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg",
-        "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg");
+    create_material(phong);
+    load_texture(&phong.diff_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_COL_3K.jpg");
+    load_texture(&phong.spec_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg");
+    load_texture(&phong.bump_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg");
 
     Mesh mesh;
     {
@@ -128,7 +128,6 @@ int main(void)
         vertex_attribs_append(attribs, 3, GL_FLOAT);
         vertex_attribs_enable_all(attribs, mesh);
     }
-
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -165,6 +164,9 @@ int main(void)
             ImGui::SliderFloat3("Light pos", (float*)&point_lights[light_index].pos, -10.f, 10.f);
             ImGui::ColorEdit3("Light color", (float*)&point_lights[light_index].color);
 
+            ImGui::Text("pointer = %p", phong.diff_tex);
+            ImGui::Image((void*)(intptr_t)phong.diff_tex, ImVec2(100, 100));
+
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
@@ -187,6 +189,7 @@ int main(void)
 
         glfwSwapBuffers(window);
         glfwPollEvents();
+
     }
 
     // Cleanup
