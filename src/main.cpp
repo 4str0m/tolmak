@@ -126,6 +126,7 @@ int main(void)
     GameObject spheres[sphere_count];
     glm::vec3 uid_colors[sphere_count];
     glm::mat4 models[sphere_count];
+    float outline_size = .05f;
     for (uint32_t i = 0; i < sphere_count; ++i)
     {
         game_object_create(spheres[i], "../resources/meshes/sphere_hres.obj");
@@ -201,6 +202,7 @@ int main(void)
             ImGui::Begin("General Infos");                          // Create a window called "Hello, world!" and append into it.
 
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+            ImGui::SliderFloat("outline size", &outline_size, 0.f, .3f); // Edit 3 floats representing a color
 
             static int light_index = 0;
             ImGui::SliderInt("Light index", &light_index, 0, N_POINT_LIGHTS);
@@ -261,7 +263,7 @@ int main(void)
         {
             glm::vec3 uid = glm::abs(mouseRGB - uid_colors[i]);
             if (uid.x < threshold && uid.y < threshold && uid.z < threshold) {
-                glm::mat4 model_scale = glm::scale(models[i], glm::vec3(1.1f));
+                glm::mat4 model_scale = glm::scale(models[i], glm::vec3(1.f + outline_size));
                 game_object_draw(spheres[i], plain_color, vp * model_scale, model_scale, camera._eye);
             }
         }
@@ -269,13 +271,12 @@ int main(void)
         GLCall(glStencilFunc(GL_ALWAYS, 1, 0xFF));
         GLCall(glDisable(GL_STENCIL_TEST));
 
-        lights_draw(projection * view);
+        lights_draw(vp);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwSwapBuffers(window);
         glfwPollEvents();
-
     }
 
     // Cleanup

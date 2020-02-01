@@ -15,7 +15,7 @@ out vec3 tangent_camera_pos;
 
 out PointLight tangent_point_lights[N_POINT_LIGHTS];
 
-%Range(0.1, 10.)
+%Range(0.1, 5.0, 1.0)
 uniform float uv_scale;
 
 void main()
@@ -55,9 +55,12 @@ uniform sampler2D diff_tex;
 uniform sampler2D spec_tex;
 uniform sampler2D bump_tex;
 
-%Color()
+%Color(1.0, 1.0, 1.0)
 uniform vec3 tint;
+
+%Range(0.0, 1.0, 1.0)
 uniform float specularity;
+%Range(0.0, 1.0, 0.5)
 uniform float bump_strength;
 
 vec3 point_light(PointLight point_light, vec3 normal, vec3 object_color, vec3 object_specular) {

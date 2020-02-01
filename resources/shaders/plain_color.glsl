@@ -11,7 +11,7 @@ void main()
 
 out vec4 output_color;
 
-%Color()
+%Color(1.0, 0.0, 0.0)
 uniform vec3 tint;
 
 void main()

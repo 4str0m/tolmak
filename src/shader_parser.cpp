@@ -98,8 +98,12 @@ const char* struct_fmt = R"(
 struct %s {
     uint32_t shader_id;)";
     
-    const char* struct_field_fmt = R"(
+const char* struct_field_fmt = R"(
     %s %s%s;)";
+const char* struct_color_fmt = R"(
+    glm::vec3 %s = glm::vec3(%f, %f, %f);)";
+const char* struct_float_fmt = R"(
+    float %s = %f;)";
 
 const char* imgui_fmt = R"(
 inline void material_imgui(%s& material)
@@ -134,8 +138,11 @@ struct UniformCustomParameter
     union Data
     {
         struct {
-            float min, max;
+            float min, max, start;
         } range_boundaries;
+        struct {
+            float r, g, b;
+        } color;
     };
 
     Type type;
@@ -233,8 +240,8 @@ inline void parse_shader(const char* shader_file_path)
         if (line[0] == '%') {
             char* rest = line + 1;
             if (!strncmp(rest, "Range", 5)) {
-                float min, max;
-                if (2 != sscanf(rest, "Range(%f, %f)", &min, &max)) {
+                float min, max, start;
+                if (3 != sscanf(rest, "Range(%f, %f, %f)", &min, &max, &start)) {
                     std::cout << "ERROR: bad formatting of custom uniform parameter (Range): " << line_bk << std::endl;
                     exit(EXIT_FAILURE);
                 }
@@ -242,13 +249,18 @@ inline void parse_shader(const char* shader_file_path)
                 custom_param.type = UniformCustomParameter::Type::RANGE;
                 custom_param.data.range_boundaries.min = min;
                 custom_param.data.range_boundaries.max = max;
-            } else if (!strncmp(rest, "Color()", 7)) {
-                if (rest[7] != '\n') {
+                custom_param.data.range_boundaries.start = start;
+            } else if (!strncmp(rest, "Color", 5)) {
+                float r, g, b;
+                if (3 != sscanf(rest, "Color(%f, %f, %f)", &r, &g, &b)) {
                     std::cout << "ERROR: bad formatting of custom uniform parameter (Color): " << line_bk << std::endl;
                     exit(EXIT_FAILURE);
                 }
                 has_custom_param = true;
                 custom_param.type = UniformCustomParameter::Type::COLOR;
+                custom_param.data.color.r = r;
+                custom_param.data.color.g = g;
+                custom_param.data.color.b = b;
             } else if (!strncmp(rest, "Hide()", 6)) {
                 if (rest[6] != '\n') {
                     std::cout << "ERROR: bad formatting of custom uniform parameter (Hide): " << line_bk << std::endl;
@@ -306,7 +318,13 @@ inline void parse_shader(const char* shader_file_path)
                     }
                 }
 
-                fprintf(outputs[STRUCT], struct_field_fmt, uniform_template.cpp_type, variable_name, uniform_template.cpp_default_value);
+                if (has_custom_param && custom_param.type == UniformCustomParameter::Type::COLOR)
+                    fprintf(outputs[STRUCT], struct_color_fmt, variable_name, custom_param.data.color.r, custom_param.data.color.g, custom_param.data.color.b);
+                else if (has_custom_param && custom_param.type == UniformCustomParameter::Type::RANGE)
+                    fprintf(outputs[STRUCT], struct_float_fmt, variable_name, custom_param.data.range_boundaries.start);
+                else
+                    fprintf(outputs[STRUCT], struct_field_fmt, uniform_template.cpp_type, variable_name, uniform_template.cpp_default_value);
+
                 if (i == SAMPLER2D) {
                     fprintf(outputs[USE_MATERIAL], use_material_sampler_fmt, variable_name, texture_id, variable_name, texture_id);
                     fprintf(outputs[IMGUI], imgui_sampler_fmt, variable_name, variable_name);

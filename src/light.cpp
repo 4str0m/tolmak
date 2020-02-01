@@ -30,7 +30,7 @@ void lights_draw(const glm::mat4& vp)
 {
     for (uint32_t i = 0; i < N_POINT_LIGHTS; ++i)
     {
-        if (point_lights[i].color == glm::vec3(0.f))
+        if (glm::length2(point_lights[i].color) < 0.001f)
             continue;
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, point_lights[i].pos);

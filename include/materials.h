@@ -50,13 +50,13 @@ inline void material_imgui(LightMaterial& material) {}
 
 struct PhongMaterial {
     uint32_t shader_id;
-    float uv_scale = 0.f;
+    float uv_scale = 1.000000;
     uint32_t diff_tex;
     uint32_t spec_tex;
     uint32_t bump_tex;
-    glm::vec3 tint = glm::vec3(0.f);
-    float specularity = 0.f;
-    float bump_strength = 0.f;
+    glm::vec3 tint = glm::vec3(1.000000, 1.000000, 1.000000);
+    float specularity = 1.000000;
+    float bump_strength = 0.500000;
 };
 
 
@@ -104,7 +104,7 @@ inline void material_create(PhongMaterial& material)
 inline void material_imgui(PhongMaterial& material)
 {
     ImGui::Begin("PhongMaterial");
-    ImGui::SliderFloat("uv_scale", (float*)&material.uv_scale, 0.100000, 10.000000);
+    ImGui::SliderFloat("uv_scale", (float*)&material.uv_scale, 0.100000, 5.000000);
     ImGui::AlignTextToFramePadding();
     ImGui::Text("diff_tex");
     ImGui::SameLine();
@@ -126,7 +126,7 @@ inline void material_imgui(PhongMaterial& material)
 
 struct PlainColorMaterial {
     uint32_t shader_id;
-    glm::vec3 tint = glm::vec3(0.f);
+    glm::vec3 tint = glm::vec3(1.000000, 0.000000, 0.000000);
 };
 
 
