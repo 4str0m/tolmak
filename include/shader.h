@@ -8,6 +8,8 @@ struct Shader
     std::unordered_map<std::string, int> uniform_locations;
 };
 
+extern std::vector<Shader> shaders;
+
 static inline int shader_finds_loc(Shader& shader, const char* uniform_name);
 
 void load_shader(Shader& shader, const char* filename);
@@ -17,49 +19,20 @@ inline void shader_bind(Shader& shader)
     GLCall(glUseProgram(shader.program));
 }
 
-
-inline void shader_set_uniform_1i(Shader& shader, const char* uniform_name, int v)
-{
-    int loc = shader_finds_loc(shader, uniform_name); 
-    GLCall(glUniform1i(loc, v));
+#define SHADER_SET_UNIFORM(type, postfix1, postfix2, ...)\
+inline void shader_set_uniform_##postfix1(Shader& shader, const char* uniform_name, const type& v) {\
+    int loc = shader_finds_loc(shader, uniform_name);\
+    GLCall(glUniform##postfix2(loc, __VA_ARGS__));\
 }
 
-inline void shader_set_uniform_1f(Shader& shader, const char* uniform_name, float v)
-{
-    int loc = shader_finds_loc(shader, uniform_name); 
-    GLCall(glUniform1f(loc, v));
-}
-inline void shader_set_uniform_2f(Shader& shader, const char* uniform_name, const glm::vec2& v)
-{
-    int loc = shader_finds_loc(shader, uniform_name); 
-    GLCall(glUniform2f(loc, v.x, v.y));
-}
-inline void shader_set_uniform_3f(Shader& shader, const char* uniform_name, const glm::vec3& v)
-{
-    int loc = shader_finds_loc(shader, uniform_name); 
-    GLCall(glUniform3f(loc, v.x, v.y, v.z));
-}
-inline void shader_set_uniform_4f(Shader& shader, const char* uniform_name, const glm::vec4& v)
-{
-    int loc = shader_finds_loc(shader, uniform_name); 
-    GLCall(glUniform4f(loc, v.x, v.y, v.z, v.w));
-}
-
-inline void shader_set_uniform_mat2(Shader& shader, const char* uniform_name, const glm::mat2& v)
-{
-    int loc = shader_finds_loc(shader, uniform_name);
-    GLCall(glUniformMatrix2fv(loc, 1, GL_FALSE, glm::value_ptr(v)));
-}
-inline void shader_set_uniform_mat3(Shader& shader, const char* uniform_name, const glm::mat3& v)
-{
-    int loc = shader_finds_loc(shader, uniform_name);
-    GLCall(glUniformMatrix3fv(loc, 1, GL_FALSE, glm::value_ptr(v)));
-}
-inline void shader_set_uniform_mat4(Shader& shader, const char* uniform_name, const glm::mat4& v)
-{
-    int loc = shader_finds_loc(shader, uniform_name);
-    GLCall(glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(v)));
-}
+SHADER_SET_UNIFORM(int, 1i, 1i, v)
+SHADER_SET_UNIFORM(float, 1f, 1f, v)
+SHADER_SET_UNIFORM(glm::vec2, 2f, 2f, v.x, v.y)
+SHADER_SET_UNIFORM(glm::vec3, 3f, 3f, v.x, v.y, v.z)
+SHADER_SET_UNIFORM(glm::vec4, 4f, 4f, v.x, v.y, v.z, v.w)
+SHADER_SET_UNIFORM(glm::mat2, mat2, Matrix2fv, 1, GL_FALSE, glm::value_ptr(v))
+SHADER_SET_UNIFORM(glm::mat3, mat3, Matrix3fv, 1, GL_FALSE, glm::value_ptr(v))
+SHADER_SET_UNIFORM(glm::mat4, mat4, Matrix4fv, 1, GL_FALSE, glm::value_ptr(v))
 
 static inline int shader_finds_loc(Shader& shader, const char* uniform_name)
 {

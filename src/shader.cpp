@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+std::vector<Shader> shaders;
+
 static const char* common_uniforms =
 "#version 460\n"
 "#define N_POINT_LIGHTS 10u\n"
