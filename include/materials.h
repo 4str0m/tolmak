@@ -123,3 +123,49 @@ inline void material_imgui(PhongMaterial& material)
     ImGui::End();
 }
 
+
+struct PlainColorMaterial {
+    Shader shader;
+    glm::vec3 tint = glm::vec3(0.f);
+};
+
+
+inline void use_material(
+    PlainColorMaterial& material,
+    const glm::mat4& mvp,
+    const glm::mat4& model,
+    const glm::vec3& eye
+)
+{
+    shader_bind(material.shader);
+    shader_set_uniform_mat4(material.shader, "MVP", mvp);
+    shader_set_uniform_mat4(material.shader, "M", model);
+    shader_set_uniform_3f(material.shader, "EYE", eye);
+
+    const char* point_light_pos_fmt = "point_lights[%u].pos";
+    const char* point_light_col_fmt = "point_lights[%u].color";
+    char point_light_pos[256];
+    char point_light_col[256];
+    for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
+        snprintf(point_light_pos, 256, point_light_pos_fmt, i);
+        snprintf(point_light_col, 256, point_light_col_fmt, i);
+        shader_set_uniform_3f(material.shader, point_light_pos, point_lights[i].pos);
+        shader_set_uniform_3f(material.shader, point_light_col, point_lights[i].color);
+    }
+    shader_set_uniform_3f(material.shader, "tint", material.tint);
+}
+
+
+inline void create_material(PlainColorMaterial& material)
+{
+    load_shader(material.shader, "../resources/shaders/plain_color.glsl");
+}
+
+
+inline void material_imgui(PlainColorMaterial& material)
+{
+    ImGui::Begin("PlainColorMaterial");
+    ImGui::ColorEdit3("tint", (float*)&material.tint);
+    ImGui::End();
+}
+

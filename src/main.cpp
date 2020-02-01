@@ -106,7 +106,7 @@ int main(void)
     GLCall(glEnable(GL_DEPTH_TEST));
     GLCall(glFrontFace(GL_CCW));
     GLCall(glCullFace(GL_BACK));
-    // GLCall(glEnable(GL_CULL_FACE));
+    GLCall(glEnable(GL_CULL_FACE));
     // GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 
     PhongMaterial phong;
@@ -115,11 +115,14 @@ int main(void)
     load_texture(&phong.spec_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg");
     load_texture(&phong.bump_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg");
 
-    Mesh mesh;
+    PlainColorMaterial plain_color;
+    create_material(plain_color);
+
+    Mesh sphere;
     {
         MeshData mesh_data;
         load_obj(mesh_data, "../resources/meshes/sphere_hres.obj");
-        mesh_from_mesh_data(mesh_data, mesh);
+        mesh_from_mesh_data(mesh_data, sphere);
 
         VertexAttribs attribs;
         vertex_attribs_append(attribs, 3, GL_FLOAT);
@@ -127,8 +130,40 @@ int main(void)
         vertex_attribs_append(attribs, 3, GL_FLOAT);
         vertex_attribs_append(attribs, 3, GL_FLOAT);
         vertex_attribs_append(attribs, 3, GL_FLOAT);
-        vertex_attribs_enable_all(attribs, mesh);
+        vertex_attribs_enable_all(attribs, sphere);
     }
+
+
+
+
+    uint32_t FBO;
+    GLCall(glGenFramebuffers(1, &FBO));
+    GLCall(glBindFramebuffer(GL_FRAMEBUFFER, FBO));
+
+    uint32_t color_buffer;
+    GLCall(glGenTextures(1, &color_buffer));
+    GLCall(glBindTexture(GL_TEXTURE_2D, color_buffer));
+    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2000, 1200, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GLCall(glBindTexture(GL_TEXTURE_2D, 0));
+
+    GLCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_buffer, 0));
+
+    unsigned int RBO;
+    GLCall(glGenRenderbuffers(1, &RBO));
+    GLCall(glBindRenderbuffer(GL_RENDERBUFFER, RBO));
+    GLCall(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 2000, 1200));
+    GLCall(glBindRenderbuffer(GL_RENDERBUFFER, 0));
+
+    GLCall(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO));
+
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+        exit(EXIT_FAILURE);
+    }
+    GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -146,10 +181,6 @@ int main(void)
         float r = 3.f;
         point_lights[0].pos = glm::vec3(r * sin(time), 0.f, r * cos(time));
         point_lights[1].pos = glm::vec3(r * sin(time + PI), 0.f, r * cos(time + PI));
-
-        GLCall(glViewport(0, 0, width, height));
-        GLCall(glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w));
-        GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -171,8 +202,15 @@ int main(void)
             ImGui::End();
         }
         material_imgui(phong);
+        material_imgui(plain_color);
         // Rendering
         ImGui::Render();
+
+        GLCall(glBindFramebuffer(GL_FRAMEBUFFER, FBO));
+        GLCall(glViewport(0, 0, width, height));
+        GLCall(glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w));
+        GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+        GLCall(glEnable(GL_DEPTH_TEST));
 
         camera.aspect_ratio = aspect_ratio;
         glm::mat4 projection = get_projection_matrix(camera);
@@ -180,9 +218,35 @@ int main(void)
         glm::mat4 model = glm::mat4(1.0f);
         glm::mat4 mvp = projection * view * model;
 
-        use_material(phong, mvp, model, camera._eye);
-        draw_mesh(mesh);
+        GLCall(glEnable(GL_STENCIL_TEST));
+        GLCall(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
 
+        GLCall(glStencilFunc(GL_ALWAYS, 1, 0xFF));
+        GLCall(glStencilMask(0xFF));
+        use_material(phong, mvp, model, camera._eye);
+        draw_mesh(sphere);
+
+        GLCall(glDisable(GL_DEPTH_TEST));
+        GLCall(glStencilFunc(GL_NOTEQUAL, 1, 0xFF));
+        GLCall(glStencilMask(0x00));
+        model = glm::scale(model, glm::vec3(1.01f));
+        mvp = projection * view * model;
+        use_material(plain_color, mvp, model, camera._eye);
+        draw_mesh(sphere);
+        GLCall(glStencilMask(0xFF));
+
+        GLCall(glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mouse_state.x, mouse_state.y, 1, 1, 0));
+        glm::vec3 mouseRGB(0.f);
+        GLCall(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (float*)&mouseRGB));
+        std::cout << mouseRGB.x << " " << mouseRGB.y << " " << mouseRGB.z << std::endl;
+
+        // GLCall(glDisable(GL_STENCIL_TEST));
+
+        GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+        GLCall(glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w));
+        GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+        GLCall(glEnable(GL_DEPTH_TEST));
+        GLCall(glDisable(GL_STENCIL_TEST));
         draw_lights(projection * view);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
