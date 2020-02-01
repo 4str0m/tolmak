@@ -16,16 +16,21 @@ static const char* common_uniforms =
 "};\n"
 "uniform PointLight point_lights[N_POINT_LIGHTS];\n";
 
-void load_shader(Shader& shader, const char* filename)
+void shader_bind(uint32_t shader_id)
+{
+    GLCall(glUseProgram(shaders[shader_id].program));
+}
+
+bool shader_load(uint32_t* shader_id, const char* file_name)
 {    
-    FILE* shader_file = fopen(filename, "r");
+    FILE* shader_file = fopen(file_name, "r");
 
     if (!shader_file) {
         std::cout << "ERROR: could not load shader file." << std::endl;
-        exit(EXIT_FAILURE);
+        return false;
     }
 
-    std::cout << "Loading \"" << filename << "\" .. ";
+    std::cout << "Loading \"" << file_name << "\" .. ";
 
     enum State
     {
@@ -66,7 +71,7 @@ void load_shader(Shader& shader, const char* filename)
             sources[state] << line;
     }
 
-    GLuint shaders[STATE_COUNT];
+    GLuint shader_programs[STATE_COUNT];
 
     for (int i = 0; i < STATE_COUNT; ++i)
     {
@@ -76,27 +81,27 @@ void load_shader(Shader& shader, const char* filename)
         const char* c_str_source;
         str_source = sources[i].str();
         c_str_source = str_source.c_str();
-        shaders[i] = glCreateShader(shader_type[i]);
-        GLCall(glShaderSource(shaders[i], 1, &c_str_source, NULL));
-        GLCall(glCompileShader(shaders[i]));
+        shader_programs[i] = glCreateShader(shader_type[i]);
+        GLCall(glShaderSource(shader_programs[i], 1, &c_str_source, NULL));
+        GLCall(glCompileShader(shader_programs[i]));
     }
 
     GLuint program = glCreateProgram();
     if (!program)
     {
         std::cout << "Error: could not create program." << std::endl;
-        exit(EXIT_FAILURE);
+        return false;
     }
-    GLCall(glAttachShader(program, shaders[VERT]));
-    GLCall(glAttachShader(program, shaders[FRAG]));
+    GLCall(glAttachShader(program, shader_programs[VERT]));
+    GLCall(glAttachShader(program, shader_programs[FRAG]));
     if (has_geometry_shader)
-        GLCall(glAttachShader(program, shaders[GEOM]));
+        GLCall(glAttachShader(program, shader_programs[GEOM]));
     GLCall(glLinkProgram(program));
 
-    GLCall(glDeleteShader(shaders[VERT]));
-    GLCall(glDeleteShader(shaders[FRAG]));
+    GLCall(glDeleteShader(shader_programs[VERT]));
+    GLCall(glDeleteShader(shader_programs[FRAG]));
     if (has_geometry_shader)
-        GLCall(glDeleteShader(shaders[GEOM]));
+        GLCall(glDeleteShader(shader_programs[GEOM]));
     
     int success;
     char info_log[512];
@@ -105,9 +110,12 @@ void load_shader(Shader& shader, const char* filename)
     {
         glGetProgramInfoLog(program, 512, NULL, info_log);
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << info_log << std::endl;
-        exit(EXIT_FAILURE);
+        return false;
     }
 
-    shader.program = program;
+    shaders.push_back({ program, std::unordered_map<std::string, int>() });
+    *shader_id = shaders.size()-1;
+
     std::cout << " done." << std::endl;
+    return true;
 }

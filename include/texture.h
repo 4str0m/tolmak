@@ -13,5 +13,5 @@ struct Texture
 
 extern std::vector<Texture> textures;
 
-bool load_texture(uint32_t* texture_id, const char* file_name);
-void bind_texture(uint32_t texture_id, uint32_t slot = 0);
+bool texture_load(uint32_t* texture_id, const char* file_name);
+void texture_bind(uint32_t texture_id, uint32_t slot = 0);

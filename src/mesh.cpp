@@ -1,6 +1,6 @@
 #include <mesh.h>
 
-void bind_mesh(const Mesh& mesh)
+void mesh_bind(const Mesh& mesh)
 {
     GLCall(glBindVertexArray(mesh.VAO));
 }
@@ -19,7 +19,7 @@ void mesh_from_mesh_data(const MeshData& mesh_data, Mesh& mesh)
     mesh.indices_count = mesh_data.indices.size();
 }
 
-void draw_mesh(const Mesh& mesh)
+void mesh_draw(const Mesh& mesh)
 {
     GLCall(glBindVertexArray(mesh.VAO));
 
@@ -39,7 +39,7 @@ void vertex_attribs_append(VertexAttribs& attribs, int size, GLenum type, GLbool
 
 void vertex_attribs_enable_all(const VertexAttribs& attribs, const Mesh& mesh)
 {
-    bind_mesh(mesh);
+    mesh_bind(mesh);
     for (uint32_t i = 0; i < attribs.attribs.size(); ++i)
     {
         const VertexAttribs::VertexAttrib attrib = attribs.attribs[i];

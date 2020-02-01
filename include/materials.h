@@ -10,22 +10,22 @@
 
 
 struct LightMaterial {
-    Shader shader;
+    uint32_t shader_id;
     int light_index = 0;
 };
 
 
-inline void use_material(
+inline void material_use(
     LightMaterial& material,
     const glm::mat4& mvp,
     const glm::mat4& model,
     const glm::vec3& eye
 )
 {
-    shader_bind(material.shader);
-    shader_set_uniform_mat4(material.shader, "MVP", mvp);
-    shader_set_uniform_mat4(material.shader, "M", model);
-    shader_set_uniform_3f(material.shader, "EYE", eye);
+    shader_bind(material.shader_id);
+    shader_set_uniform_mat4(material.shader_id, "MVP", mvp);
+    shader_set_uniform_mat4(material.shader_id, "M", model);
+    shader_set_uniform_3f(material.shader_id, "EYE", eye);
 
     const char* point_light_pos_fmt = "point_lights[%u].pos";
     const char* point_light_col_fmt = "point_lights[%u].color";
@@ -34,22 +34,22 @@ inline void use_material(
     for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
         snprintf(point_light_pos, 256, point_light_pos_fmt, i);
         snprintf(point_light_col, 256, point_light_col_fmt, i);
-        shader_set_uniform_3f(material.shader, point_light_pos, point_lights[i].pos);
-        shader_set_uniform_3f(material.shader, point_light_col, point_lights[i].color);
+        shader_set_uniform_3f(material.shader_id, point_light_pos, point_lights[i].pos);
+        shader_set_uniform_3f(material.shader_id, point_light_col, point_lights[i].color);
     }
-    shader_set_uniform_1i(material.shader, "light_index", material.light_index);
+    shader_set_uniform_1i(material.shader_id, "light_index", material.light_index);
 }
 
 
-inline void create_material(LightMaterial& material)
+inline void material_create(LightMaterial& material)
 {
-    load_shader(material.shader, "../resources/shaders/light.glsl");
+    shader_load(&material.shader_id, "../resources/shaders/light.glsl");
 }
 
 inline void material_imgui(LightMaterial& material) {}
 
 struct PhongMaterial {
-    Shader shader;
+    uint32_t shader_id;
     float uv_scale = 0.f;
     uint32_t diff_tex;
     uint32_t spec_tex;
@@ -60,17 +60,17 @@ struct PhongMaterial {
 };
 
 
-inline void use_material(
+inline void material_use(
     PhongMaterial& material,
     const glm::mat4& mvp,
     const glm::mat4& model,
     const glm::vec3& eye
 )
 {
-    shader_bind(material.shader);
-    shader_set_uniform_mat4(material.shader, "MVP", mvp);
-    shader_set_uniform_mat4(material.shader, "M", model);
-    shader_set_uniform_3f(material.shader, "EYE", eye);
+    shader_bind(material.shader_id);
+    shader_set_uniform_mat4(material.shader_id, "MVP", mvp);
+    shader_set_uniform_mat4(material.shader_id, "M", model);
+    shader_set_uniform_3f(material.shader_id, "EYE", eye);
 
     const char* point_light_pos_fmt = "point_lights[%u].pos";
     const char* point_light_col_fmt = "point_lights[%u].color";
@@ -79,25 +79,25 @@ inline void use_material(
     for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
         snprintf(point_light_pos, 256, point_light_pos_fmt, i);
         snprintf(point_light_col, 256, point_light_col_fmt, i);
-        shader_set_uniform_3f(material.shader, point_light_pos, point_lights[i].pos);
-        shader_set_uniform_3f(material.shader, point_light_col, point_lights[i].color);
+        shader_set_uniform_3f(material.shader_id, point_light_pos, point_lights[i].pos);
+        shader_set_uniform_3f(material.shader_id, point_light_col, point_lights[i].color);
     }
-    shader_set_uniform_1f(material.shader, "uv_scale", material.uv_scale);
-    shader_set_uniform_1i(material.shader, "diff_tex", 0);
-    bind_texture(material.diff_tex, 0);
-    shader_set_uniform_1i(material.shader, "spec_tex", 1);
-    bind_texture(material.spec_tex, 1);
-    shader_set_uniform_1i(material.shader, "bump_tex", 2);
-    bind_texture(material.bump_tex, 2);
-    shader_set_uniform_3f(material.shader, "tint", material.tint);
-    shader_set_uniform_1f(material.shader, "specularity", material.specularity);
-    shader_set_uniform_1f(material.shader, "bump_strength", material.bump_strength);
+    shader_set_uniform_1f(material.shader_id, "uv_scale", material.uv_scale);
+    shader_set_uniform_1i(material.shader_id, "diff_tex", 0);
+    texture_bind(material.diff_tex, 0);
+    shader_set_uniform_1i(material.shader_id, "spec_tex", 1);
+    texture_bind(material.spec_tex, 1);
+    shader_set_uniform_1i(material.shader_id, "bump_tex", 2);
+    texture_bind(material.bump_tex, 2);
+    shader_set_uniform_3f(material.shader_id, "tint", material.tint);
+    shader_set_uniform_1f(material.shader_id, "specularity", material.specularity);
+    shader_set_uniform_1f(material.shader_id, "bump_strength", material.bump_strength);
 }
 
 
-inline void create_material(PhongMaterial& material)
+inline void material_create(PhongMaterial& material)
 {
-    load_shader(material.shader, "../resources/shaders/phong.glsl");
+    shader_load(&material.shader_id, "../resources/shaders/phong.glsl");
 }
 
 
@@ -125,22 +125,22 @@ inline void material_imgui(PhongMaterial& material)
 
 
 struct PlainColorMaterial {
-    Shader shader;
+    uint32_t shader_id;
     glm::vec3 tint = glm::vec3(0.f);
 };
 
 
-inline void use_material(
+inline void material_use(
     PlainColorMaterial& material,
     const glm::mat4& mvp,
     const glm::mat4& model,
     const glm::vec3& eye
 )
 {
-    shader_bind(material.shader);
-    shader_set_uniform_mat4(material.shader, "MVP", mvp);
-    shader_set_uniform_mat4(material.shader, "M", model);
-    shader_set_uniform_3f(material.shader, "EYE", eye);
+    shader_bind(material.shader_id);
+    shader_set_uniform_mat4(material.shader_id, "MVP", mvp);
+    shader_set_uniform_mat4(material.shader_id, "M", model);
+    shader_set_uniform_3f(material.shader_id, "EYE", eye);
 
     const char* point_light_pos_fmt = "point_lights[%u].pos";
     const char* point_light_col_fmt = "point_lights[%u].color";
@@ -149,16 +149,16 @@ inline void use_material(
     for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
         snprintf(point_light_pos, 256, point_light_pos_fmt, i);
         snprintf(point_light_col, 256, point_light_col_fmt, i);
-        shader_set_uniform_3f(material.shader, point_light_pos, point_lights[i].pos);
-        shader_set_uniform_3f(material.shader, point_light_col, point_lights[i].color);
+        shader_set_uniform_3f(material.shader_id, point_light_pos, point_lights[i].pos);
+        shader_set_uniform_3f(material.shader_id, point_light_col, point_lights[i].color);
     }
-    shader_set_uniform_3f(material.shader, "tint", material.tint);
+    shader_set_uniform_3f(material.shader_id, "tint", material.tint);
 }
 
 
-inline void create_material(PlainColorMaterial& material)
+inline void material_create(PlainColorMaterial& material)
 {
-    load_shader(material.shader, "../resources/shaders/plain_color.glsl");
+    shader_load(&material.shader_id, "../resources/shaders/plain_color.glsl");
 }
 
 

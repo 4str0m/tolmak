@@ -9,12 +9,12 @@ PointLight point_lights[N_POINT_LIGHTS];
 static LightMaterial light_mat;
 static Mesh light_mesh;
 
-void init_lights()
+void lights_init()
 {
-    create_material(light_mat);
+    material_create(light_mat);
 
     MeshData mesh_data;
-    load_obj(mesh_data, "../resources/meshes/sphere.obj");
+    obj_load(mesh_data, "../resources/meshes/sphere.obj");
     mesh_from_mesh_data(mesh_data, light_mesh);
 
     VertexAttribs attribs;
@@ -28,7 +28,7 @@ void init_lights()
     point_lights[0].color = glm::vec3(1.f, 1.f, .9f);
     point_lights[1].color = glm::vec3(.9f, 1.f, 1.f);
 }
-void draw_lights(const glm::mat4& vp)
+void lights_draw(const glm::mat4& vp)
 {
     for (uint32_t i = 0; i < N_POINT_LIGHTS; ++i)
     {
@@ -38,7 +38,7 @@ void draw_lights(const glm::mat4& vp)
         model = glm::translate(model, point_lights[i].pos);
         model = glm::scale(model, glm::vec3(.1f));
         light_mat.light_index = i;
-        use_material(light_mat, vp * model, glm::mat4(0.f), glm::vec3(0.f));
-        draw_mesh(light_mesh);
+        material_use(light_mat, vp * model, glm::mat4(0.f), glm::vec3(0.f));
+        mesh_draw(light_mesh);
     }
 }

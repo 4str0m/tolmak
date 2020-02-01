@@ -7,7 +7,7 @@
 
 std::vector<Texture> textures;
 
-bool load_texture(uint32_t* texture_id, const char* file_name)
+bool texture_load(uint32_t* texture_id, const char* file_name)
 {
     uint32_t renderer_id;
     GLCall(glGenTextures(1, &renderer_id));
@@ -34,7 +34,7 @@ bool load_texture(uint32_t* texture_id, const char* file_name)
     return true;
 }
 
-void bind_texture(uint32_t texture_id, uint32_t slot)
+void texture_bind(uint32_t texture_id, uint32_t slot)
 {
     GLCall(glActiveTexture(GL_TEXTURE0 + slot));
     GLCall(glBindTexture(GL_TEXTURE_2D, textures[texture_id].renderer_id));

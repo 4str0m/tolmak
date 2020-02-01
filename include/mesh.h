@@ -9,9 +9,9 @@ struct Mesh
     uint32_t indices_count;
 };
 
-void bind_mesh(const Mesh& mesh);
+void mesh_bind(const Mesh& mesh);
 void mesh_from_mesh_data(const MeshData& mesh_data, Mesh& mesh);
-void draw_mesh(const Mesh& mesh);
+void mesh_draw(const Mesh& mesh);
 
 struct VertexAttribs
 {

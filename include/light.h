@@ -12,5 +12,5 @@ struct PointLight
 
 extern PointLight point_lights[N_POINT_LIGHTS];
 
-void init_lights();
-void draw_lights(const glm::mat4& mvp);
+void lights_init();
+void lights_draw(const glm::mat4& mvp);

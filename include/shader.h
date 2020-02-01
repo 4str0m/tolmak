@@ -10,18 +10,16 @@ struct Shader
 
 extern std::vector<Shader> shaders;
 
-static inline int shader_finds_loc(Shader& shader, const char* uniform_name);
+bool shader_load(uint32_t* shader_id, const char* file_name);
+void shader_bind(uint32_t shader_id);
 
-void load_shader(Shader& shader, const char* filename);
+static inline int shader_find_loc(uint32_t shader_id, const char* uniform_name);
 
-inline void shader_bind(Shader& shader)
-{
-    GLCall(glUseProgram(shader.program));
-}
+
 
 #define SHADER_SET_UNIFORM(type, postfix1, postfix2, ...)\
-inline void shader_set_uniform_##postfix1(Shader& shader, const char* uniform_name, const type& v) {\
-    int loc = shader_finds_loc(shader, uniform_name);\
+inline void shader_set_uniform_##postfix1(uint32_t shader_id, const char* uniform_name, const type& v) {\
+    int loc = shader_find_loc(shader_id, uniform_name);\
     GLCall(glUniform##postfix2(loc, __VA_ARGS__));\
 }
 
@@ -34,8 +32,9 @@ SHADER_SET_UNIFORM(glm::mat2, mat2, Matrix2fv, 1, GL_FALSE, glm::value_ptr(v))
 SHADER_SET_UNIFORM(glm::mat3, mat3, Matrix3fv, 1, GL_FALSE, glm::value_ptr(v))
 SHADER_SET_UNIFORM(glm::mat4, mat4, Matrix4fv, 1, GL_FALSE, glm::value_ptr(v))
 
-static inline int shader_finds_loc(Shader& shader, const char* uniform_name)
+static inline int shader_find_loc(uint32_t shader_id, const char* uniform_name)
 {
+    Shader& shader = shaders[shader_id];
     auto found = shader.uniform_locations.find(uniform_name);
     int loc;
     if (found == shader.uniform_locations.end())

@@ -17,4 +17,4 @@ struct MeshData
     std::vector<uint32_t> indices;
 };
 
-void load_obj(MeshData& mesh, const char *filename);
+void obj_load(MeshData& mesh, const char *filename);

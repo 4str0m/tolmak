@@ -101,7 +101,7 @@ int main(void)
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
     
-    init_lights();
+    lights_init();
  
     GLCall(glEnable(GL_DEPTH_TEST));
     GLCall(glFrontFace(GL_CCW));
@@ -110,18 +110,18 @@ int main(void)
     // GLCall(glPolygonMode(GL_FRONT_AND_BACK, GL_LINE));
 
     PhongMaterial phong;
-    create_material(phong);
-    load_texture(&phong.diff_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_COL_3K.jpg");
-    load_texture(&phong.spec_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg");
-    load_texture(&phong.bump_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg");
+    material_create(phong);
+    texture_load(&phong.diff_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_COL_3K.jpg");
+    texture_load(&phong.spec_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_REFL_3K.jpg");
+    texture_load(&phong.bump_tex, "../resources/StoneBricksBeige015/REGULAR/3K/StoneBricksBeige015_NRM_3K.jpg");
 
     PlainColorMaterial plain_color;
-    create_material(plain_color);
+    material_create(plain_color);
 
     Mesh sphere;
     {
         MeshData mesh_data;
-        load_obj(mesh_data, "../resources/meshes/sphere_hres.obj");
+        obj_load(mesh_data, "../resources/meshes/sphere_hres.obj");
         mesh_from_mesh_data(mesh_data, sphere);
 
         VertexAttribs attribs;
@@ -132,9 +132,6 @@ int main(void)
         vertex_attribs_append(attribs, 3, GL_FLOAT);
         vertex_attribs_enable_all(attribs, sphere);
     }
-
-
-
 
     uint32_t FBO;
     GLCall(glGenFramebuffers(1, &FBO));
@@ -223,16 +220,16 @@ int main(void)
 
         GLCall(glStencilFunc(GL_ALWAYS, 1, 0xFF));
         GLCall(glStencilMask(0xFF));
-        use_material(phong, mvp, model, camera._eye);
-        draw_mesh(sphere);
+        material_use(phong, mvp, model, camera._eye);
+        mesh_draw(sphere);
 
         GLCall(glDisable(GL_DEPTH_TEST));
         GLCall(glStencilFunc(GL_NOTEQUAL, 1, 0xFF));
         GLCall(glStencilMask(0x00));
         model = glm::scale(model, glm::vec3(1.01f));
         mvp = projection * view * model;
-        use_material(plain_color, mvp, model, camera._eye);
-        draw_mesh(sphere);
+        material_use(plain_color, mvp, model, camera._eye);
+        mesh_draw(sphere);
         GLCall(glStencilMask(0xFF));
 
         GLCall(glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mouse_state.x, mouse_state.y, 1, 1, 0));
@@ -247,7 +244,7 @@ int main(void)
         GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
         GLCall(glEnable(GL_DEPTH_TEST));
         GLCall(glDisable(GL_STENCIL_TEST));
-        draw_lights(projection * view);
+        lights_draw(projection * view);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 

@@ -56,18 +56,18 @@ const UniformTemplate uniform_templates[UNIFORM_TYPE_COUNT] = {
     {"sampler2D", "uint32_t", "", "1i", nullptr, ""}
 };
 
-const char* use_material_fmt = R"(
-inline void use_material(
+const char* material_use_fmt = R"(
+inline void material_use(
     %s& material,
     const glm::mat4& mvp,
     const glm::mat4& model,
     const glm::vec3& eye
 )
 {
-    shader_bind(material.shader);
-    shader_set_uniform_mat4(material.shader, "MVP", mvp);
-    shader_set_uniform_mat4(material.shader, "M", model);
-    shader_set_uniform_3f(material.shader, "EYE", eye);
+    shader_bind(material.shader_id);
+    shader_set_uniform_mat4(material.shader_id, "MVP", mvp);
+    shader_set_uniform_mat4(material.shader_id, "M", model);
+    shader_set_uniform_3f(material.shader_id, "EYE", eye);
 
     const char* point_light_pos_fmt = "point_lights[%%u].pos";
     const char* point_light_col_fmt = "point_lights[%%u].color";
@@ -76,27 +76,27 @@ inline void use_material(
     for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
         snprintf(point_light_pos, 256, point_light_pos_fmt, i);
         snprintf(point_light_col, 256, point_light_col_fmt, i);
-        shader_set_uniform_3f(material.shader, point_light_pos, point_lights[i].pos);
-        shader_set_uniform_3f(material.shader, point_light_col, point_lights[i].color);
+        shader_set_uniform_3f(material.shader_id, point_light_pos, point_lights[i].pos);
+        shader_set_uniform_3f(material.shader_id, point_light_col, point_lights[i].color);
     })";
 
 const char* use_material_sampler_fmt = R"(
-    shader_set_uniform_1i(material.shader, "%s", %d);
-    bind_texture(material.%s, %d);)";
+    shader_set_uniform_1i(material.shader_id, "%s", %d);
+    texture_bind(material.%s, %d);)";
 
 const char* use_material_variable_fmt = R"(
-    shader_set_uniform_%s(material.shader, "%s", material.%s);)";
+    shader_set_uniform_%s(material.shader_id, "%s", material.%s);)";
 
-const char* create_material_fmt = R"(
-inline void create_material(%s& material)
+const char* material_create_fmt = R"(
+inline void material_create(%s& material)
 {
-    load_shader(material.shader, "%s");
+    shader_load(&material.shader_id, "%s");
 }
 )";
 
 const char* struct_fmt = R"(
 struct %s {
-    Shader shader;)";
+    uint32_t shader_id;)";
     
     const char* struct_field_fmt = R"(
     %s %s%s;)";
@@ -214,9 +214,9 @@ inline void parse_shader(const char* shader_file_path)
         }
     }
 
-    fprintf(outputs[CREATE_MATERIAL], create_material_fmt, struct_material_name, shader_file_path);
+    fprintf(outputs[CREATE_MATERIAL], material_create_fmt, struct_material_name, shader_file_path);
     fprintf(outputs[STRUCT], struct_fmt, struct_material_name);
-    fprintf(outputs[USE_MATERIAL], use_material_fmt, struct_material_name);
+    fprintf(outputs[USE_MATERIAL], material_use_fmt, struct_material_name);
     fprintf(outputs[IMGUI], imgui_fmt, struct_material_name, struct_material_name);
 
     bool has_non_trivial_imgui = false;
