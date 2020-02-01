@@ -11,16 +11,10 @@ void mesh_bind(uint32_t mesh_id)
 void mesh_create(uint32_t *mesh_id, const char *file_path)
 {
     size_t file_path_len = strlen(file_path);
-    if (file_path_len > MAX_PATH_LENGTH)
-    {
-        std::cout << "Error: file path too long: " << file_path << std::endl;
-        exit(EXIT_FAILURE); 
-    }
+    ASSERT(file_path_len < MAX_PATH_LENGTH, "file path too long: \"%s\".", file_path);
 
-    for (uint32_t i = 0; i < meshes.size(); ++i)
-    {
-        if (!strncmp(file_path, meshes[i].file_path, MAX_PATH_LENGTH))
-        {
+    for (uint32_t i = 0; i < meshes.size(); ++i) {
+        if (!strncmp(file_path, meshes[i].file_path, MAX_PATH_LENGTH)) {
             *mesh_id = i;
             return;
         }

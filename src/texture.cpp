@@ -13,7 +13,7 @@ void textures_init()
 {
     if (default_texture_id != (uint32_t)~0)
     {
-        std::cout << "Warning: tried to init textures more than once." << std::endl;
+        LOG(WARNING, "tried to init textures more than once.");
         return;
     }
     const uint8_t default_color[3] = { 255, 0, 255 };
@@ -40,10 +40,7 @@ void texture_create(uint32_t* texture_id, int width, int height, int n_channels,
 bool texture_load(uint32_t* texture_id, const char* file_path)
 {
     size_t file_path_len = strlen(file_path);
-    if (file_path_len > MAX_PATH_LENGTH) {
-        std::cout << "Error: file path too long: " << file_path << std::endl;
-        exit(EXIT_FAILURE); 
-    }
+    ASSERT(file_path_len < MAX_PATH_LENGTH, "file path too long: \"%s\".", file_path);
 
     for (uint32_t i = 0; i < textures.size(); ++i)
     {
@@ -67,14 +64,12 @@ bool texture_load(uint32_t* texture_id, const char* file_path)
     unsigned char *data = stbi_load(file_path, &width, &height, &n_channels, 0);
     if (data) {
         if (n_channels != 3)
-        {
-            std::cout << "Error: number of channels not supported: " << file_path << std::endl;
-            exit(EXIT_FAILURE); 
-        }
+            LOG(ERROR, "number of channels not supported (%d != 3): \"%s\".", n_channels, file_path);
+
         GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data));
         GLCall(glGenerateMipmap(GL_TEXTURE_2D));
     } else {
-        std::cout << "Warning: failed to load texture: " << file_path << std::endl;
+        LOG(WARNING, "failed to load texture: \"%s\".", file_path);
         *texture_id = default_texture_id;
         return false;
     }
@@ -82,6 +77,8 @@ bool texture_load(uint32_t* texture_id, const char* file_path)
 
     textures.push_back({{0}, width, height, n_channels, renderer_id});
     *texture_id = textures.size()-1;
+    
+    LOG(SUCCESS, "finished loading texture: \"%s\".", file_path);
     return true;
 }
 

@@ -18,6 +18,7 @@
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <cstdarg>
 
 #define PI 3.141592654f
 #define HALF_PI 1.570796327f
@@ -32,6 +33,23 @@
         x;\
         if (GL_log_error(#x, __FILE__, __LINE__)) exit(EXIT_FAILURE);\
     } while(0)
+
+#define LOG(level, fmt, ...) log(level, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
+
+#define ASSERT(cond, fmt, ...)\
+do {\
+    if (!(cond)) LOG(ERROR, fmt, ##__VA_ARGS__);\
+} while(0)
+
+enum LogLevel
+{
+    INFO,
+    SUCCESS,
+    WARNING,
+    ERROR
+};
+
+void log(LogLevel level, const char* file, int line, const char *fmt, ...);
 
 struct MouseState
 {

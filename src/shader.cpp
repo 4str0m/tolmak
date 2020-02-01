@@ -24,29 +24,18 @@ void shader_bind(uint32_t shader_id)
 bool shader_load(uint32_t* shader_id, const char* file_path)
 {
     size_t file_path_len = strlen(file_path);
-    if (file_path_len > MAX_PATH_LENGTH)
-    {
-        std::cout << "Error: file path too long: " << file_path << std::endl;
-        exit(EXIT_FAILURE); 
-    }
 
-    for (uint32_t i = 0; i < shaders.size(); ++i)
-    {
-        if (!strncmp(file_path, shaders[i].file_path, MAX_PATH_LENGTH))
-        {
+    ASSERT(file_path_len < MAX_PATH_LENGTH, "file path too long: \"%s\".", file_path);
+
+    for (uint32_t i = 0; i < shaders.size(); ++i) {
+        if (!strncmp(file_path, shaders[i].file_path, MAX_PATH_LENGTH)) {
             *shader_id = i;
             return true;
         }
     }
 
     FILE* shader_file = fopen(file_path, "r");
-
-    if (!shader_file) {
-        std::cout << "ERROR: could not load shader file." << std::endl;
-        return false;
-    }
-
-    std::cout << "Loading \"" << file_path << "\" .. ";
+    ASSERT(shader_file, "could not load shader file: \"%s\".", file_path);
 
     enum State
     {
@@ -89,10 +78,10 @@ bool shader_load(uint32_t* shader_id, const char* file_path)
 
     GLuint shader_programs[STATE_COUNT];
 
-    for (int i = 0; i < STATE_COUNT; ++i)
-    {
+    for (int i = 0; i < STATE_COUNT; ++i) {
         if (i == GEOM && !has_geometry_shader)
             continue;
+        
         std::string str_source;
         const char* c_str_source;
         str_source = sources[i].str();
@@ -103,11 +92,9 @@ bool shader_load(uint32_t* shader_id, const char* file_path)
     }
 
     GLuint program = glCreateProgram();
-    if (!program)
-    {
-        std::cout << "Error: could not create program." << std::endl;
-        return false;
-    }
+
+    ASSERT(program, "could not create program.");
+
     GLCall(glAttachShader(program, shader_programs[VERT]));
     GLCall(glAttachShader(program, shader_programs[FRAG]));
     if (has_geometry_shader)
@@ -122,11 +109,9 @@ bool shader_load(uint32_t* shader_id, const char* file_path)
     int success;
     char info_log[512];
     glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if(!success)
-    {
+    if(!success) {
         glGetProgramInfoLog(program, 512, NULL, info_log);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << info_log << std::endl;
-        return false;
+        LOG(ERROR, "shader program linking failed [%s]: %s", file_path, info_log);
     }
 
     Shader shader;
@@ -138,6 +123,6 @@ bool shader_load(uint32_t* shader_id, const char* file_path)
     shaders.emplace_back(shader);
     *shader_id = shaders.size()-1;
 
-    std::cout << " done." << std::endl;
+    LOG(SUCCESS, "finished loading shader: \"%s\".", file_path);
     return true;
 }

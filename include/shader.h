@@ -40,7 +40,7 @@ static inline int shader_find_loc(uint32_t shader_id, const char* uniform_name)
     {
         loc = glGetUniformLocation(shader.program, uniform_name);
         if (loc == -1)
-            std::cout << "Warning: uniform not found \"" << uniform_name << "\"." << std::endl;
+            LOG(WARNING, "uniforn not found: %s [%s]", uniform_name, shaders[shader_id].file_path);
         shader.uniform_locations[uniform_name] = loc;
     }
     else

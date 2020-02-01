@@ -1,6 +1,6 @@
 #include <mesh_io.h>
 
-void obj_load(MeshData& mesh, const char *filename) {
+void obj_load(MeshData& mesh, const char *file_path) {
     /// Vertex indices used by the OBJ format
     struct obj_vertex {
         uint32_t p = (uint32_t) -1;
@@ -34,13 +34,10 @@ void obj_load(MeshData& mesh, const char *filename) {
 
     typedef std::unordered_map<obj_vertex, uint32_t, obj_vertexHash> VertexMap;
 
-    FILE* file = fopen(filename, "r");
+    FILE* file = fopen(file_path, "r");
     if (!file) {
-        std::cout << "Invalid file name: \"" << filename << "\"" << std::endl;
-        throw std::runtime_error("Unable to open OBJ file !");
+        LOG(ERROR, "invalid file path: \"%s\".", file_path);
     }
-    std::cout << "Loading \"" << filename << "\" .. ";
-    std::cout.flush();
 
     std::vector<glm::vec3>   positions;
     std::vector<glm::vec2>   texcoords;
@@ -51,8 +48,10 @@ void obj_load(MeshData& mesh, const char *filename) {
 
     char line[256];
     char line_bk[256];
+    int line_number = 0;
     size_t len = 256;
     while (fgets(line, len, file) != nullptr) {
+        line_number++;
         memcpy(line_bk, line, 256);
         char* prefix = line;
         char* rest = line;
@@ -62,32 +61,25 @@ void obj_load(MeshData& mesh, const char *filename) {
         size_t prefix_length = (size_t)(rest-prefix);
         if (!strncmp(prefix, "v", prefix_length)) {
             glm::vec3 p;
-            if (sscanf(rest, "%f %f %f", &p.x, &p.y, &p.z) != 3) {
-                std::cout << "Invalid vertex position data: \"" << line_bk << "\"" << std::endl;
-                throw std::runtime_error("Could not load obj file");
-            }
+            if (sscanf(rest, "%f %f %f", &p.x, &p.y, &p.z) != 3)
+                LOG(ERROR, "invalid vertex position: \"%s\" [%s:%d].", line_bk, file_path, line_number);
             positions.push_back(p);
         } else if (!strncmp(prefix, "vt", prefix_length)) {
             glm::vec2 tc;
-            if (sscanf(rest, "%f %f", &tc.x, &tc.y) != 2) {
-                std::cout << "Invalid texture coordinate data: \"" << line_bk << "\"" << std::endl;
-                throw std::runtime_error("Could not load obj file");
-            }
+            if (sscanf(rest, "%f %f", &tc.x, &tc.y) != 2)
+                LOG(ERROR, "invalid texture coordinate: \"%s\" [%s:%d].", line_bk, file_path, line_number);
             texcoords.push_back(tc);
         } else if (!strncmp(prefix, "vn", prefix_length)) {
             glm::vec3 n;
-            if (sscanf(rest, "%f %f %f", &n.x, &n.y, &n.z) != 3) {
-                std::cout << "Invalid vertex normals data: \"" << line_bk << "\"" << std::endl;
-                throw std::runtime_error("Could not load obj file");
-            }
+            if (sscanf(rest, "%f %f %f", &n.x, &n.y, &n.z) != 3)
+                LOG(ERROR, "invalid vertex normal: \"%s\" [%s:%d].", line_bk, file_path, line_number);
             normals.push_back(n);
         } else if (!strncmp(prefix, "f", prefix_length)) {
             char v1[64], v2[64], v3[64], v4[64];
             int count = 0;
-            if ((count = sscanf(rest, "%s %s %s %s", v1, v2, v3, v4)) < 3) {
-                std::cout << "Invalid vertex normals data: \"" << line_bk << "\"" << std::endl;
-                throw std::runtime_error("Could not load obj file");
-            }
+            if ((count = sscanf(rest, "%s %s %s %s", v1, v2, v3, v4)) < 3)
+                LOG(ERROR, "invalid face indices: \"%s\" [%s:%d].", line_bk, file_path, line_number);
+
             obj_vertex tri[6];
             int nVertices = 3;
 
@@ -156,6 +148,5 @@ void obj_load(MeshData& mesh, const char *filename) {
         v2.tangent += tangent;
         v2.bitangent += bitangent;
     }
-
-    std::cout << " done." << std::endl;
+    LOG(SUCCESS, "finished loading obj file: \"%s\".", file_path);
 }
