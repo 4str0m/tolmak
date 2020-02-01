@@ -31,7 +31,8 @@
     do {\
         GL_clear_errors();\
         x;\
-        if (GL_log_error(#x, __FILE__, __LINE__)) exit(EXIT_FAILURE);\
+        GLenum error = glGetError();\
+        ASSERT(!error, "OpenGL error 0x%04x.", error);\
     } while(0)
 
 #define LOG(level, fmt, ...) log(level, __FILE__, __LINE__, fmt, ##__VA_ARGS__)
@@ -67,17 +68,6 @@ struct KeyboardState
 
 inline void GL_clear_errors() { while(glGetError()); }
 
-inline bool GL_log_error(const char* func, const char* file, int line)
-{
-    if (GLenum error = glGetError())
-    {
-        std::cout << "[OpenGL Error] " << "0x" << std::hex << error << ": " <<  func <<
-            " " << file << ":" << line << std::endl;
-        return true;
-    }
-    return false;
-}
-
 inline uint32_t size_of_gl_type(GLenum type)
 {
     switch(type)
@@ -90,7 +80,7 @@ inline uint32_t size_of_gl_type(GLenum type)
         case GL_FLOAT:
             return 4;
         default:
-            std::cout << "OPEN_GL type not handled" << std::endl;
-            exit(EXIT_FAILURE);
+            LOG(ERROR, "OpenGL type not handled.");
+            return 0;
     }
 }
