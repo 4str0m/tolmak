@@ -124,7 +124,6 @@ const char* imgui_int_variable_fmt = R"(
 const char* imgui_color3_variable_fmt = R"(
     ImGui::ColorEdit3("%s", (float*)&material.%s);)";
 
-
 struct UniformCustomParameter
 {
     enum Type

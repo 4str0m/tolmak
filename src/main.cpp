@@ -12,15 +12,7 @@
 #include <game_object.h>
 #include <frame_buffer.h>
 
-OrbitCamera camera = {
-	glm::vec3(0.f,  0.f, 0.f),
-	0.f, 0.f,
-	10.f,
-	glm::radians(45.f),
-	1.f,
-	0.1f, 100.f
-};
-
+Camera camera;
 static MouseState mouse_state;
 static KeyboardState keyboard_state;
 
@@ -33,6 +25,14 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 {
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
         glfwSetWindowShouldClose(window, GLFW_TRUE);
+    if (key == GLFW_KEY_TAB && action == GLFW_PRESS) {
+        camera.free_flying = !camera.free_flying;
+        camera.must_recompute = true;
+        if (camera.free_flying)
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+        else
+            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    }
 
     keyboard_state.action[key] = action;
     keyboard_state.mods[key] = mods;
@@ -40,22 +40,22 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action, 
 
 static void cursor_position_callback(GLFWwindow* window, double xpos, double ypos)
 {
-	mouse_state.dx = xpos - mouse_state.x;
-	mouse_state.dy = ypos - mouse_state.y;
+    mouse_state.dx = xpos - mouse_state.x;
+    mouse_state.dy = ypos - mouse_state.y;
 
-	mouse_state.x = xpos;
-	mouse_state.y = ypos;
-	
-	camera_handle_mouse_move(camera, mouse_state);
+    mouse_state.x = xpos;
+    mouse_state.y = ypos;
+    
+    camera_handle_mouse_move(camera, mouse_state);
 }
 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
-	mouse_state.action[button] = action;
+    mouse_state.action[button] = action;
     mouse_state.mods[button] = mods;
 }
 
 static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset) {
-	camera_handle_scroll(camera, xoffset, yoffset);
+    camera_handle_scroll(camera, xoffset, yoffset);
 }
 
 int main(void)
@@ -202,11 +202,14 @@ int main(void)
         for (uint32_t i = 0; i < sphere_count; ++i)
         {
             uid_mat.tint = uid_colors[i];
-            game_object_draw(spheres[i], uid_mat, vp * models[i], models[i], camera._eye);
+            game_object_draw(spheres[i], uid_mat, vp * models[i], models[i], camera.eye);
         }
         glm::vec3 mouseRGB(0.f);
         texture_bind(mouse_pixel_color_texture_id);
-        GLCall(glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mouse_state.x, height - mouse_state.y, 1, 1, 0));
+        if (camera.free_flying)
+            GLCall(glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width/2, height/2, 1, 1, 0));
+        else
+            GLCall(glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mouse_state.x, height - mouse_state.y, 1, 1, 0));
         GLCall(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (float*)&mouseRGB));
 
         GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
@@ -222,7 +225,7 @@ int main(void)
         GLCall(glStencilMask(0xFF));
         for (uint32_t i = 0; i < sphere_count; ++i)
         {
-            game_object_draw(spheres[i], phong, vp * models[i], models[i], camera._eye);
+            game_object_draw(spheres[i], phong, vp * models[i], models[i], camera.eye);
         }
 
         GLCall(glDisable(GL_DEPTH_TEST));
@@ -235,7 +238,7 @@ int main(void)
             glm::vec3 uid = glm::abs(mouseRGB - uid_colors[i]);
             if (uid.x < threshold && uid.y < threshold && uid.z < threshold) {
                 glm::mat4 model_scale = glm::scale(models[i], glm::vec3(1.f + outline_size));
-                game_object_draw(spheres[i], plain_color, vp * model_scale, model_scale, camera._eye);
+                game_object_draw(spheres[i], plain_color, vp * model_scale, model_scale, camera.eye);
             }
         }
 
