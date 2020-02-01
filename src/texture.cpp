@@ -7,6 +7,23 @@
 
 std::vector<Texture> textures;
 
+void texture_create(uint32_t* texture_id, int width, int height, int n_channels)
+{
+    uint32_t renderer_id;
+
+    GLCall(glGenTextures(1, &renderer_id));
+    GLCall(glBindTexture(GL_TEXTURE_2D, renderer_id));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
+    GLCall(glBindTexture(GL_TEXTURE_2D, 0));
+
+    textures.push_back({width, height, n_channels, renderer_id});
+    *texture_id = textures.size()-1;
+}
+
 bool texture_load(uint32_t* texture_id, const char* file_name)
 {
     uint32_t renderer_id;
@@ -20,7 +37,7 @@ bool texture_load(uint32_t* texture_id, const char* file_name)
     // load and generate the texture
     int width, height, n_channels;
     unsigned char *data = stbi_load(file_name, &width, &height, &n_channels, 0);
-    if (data) {
+    if (data && n_channels == 3) {
         GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data));
         GLCall(glGenerateMipmap(GL_TEXTURE_2D));
     } else {

@@ -10,6 +10,7 @@
 #include <materials.h>
 #include <light.h>
 #include <game_object.h>
+#include <frame_buffer.h>
 
 OrbitCamera camera = {
 	glm::vec3(0.f,  0.f, 0.f),
@@ -138,42 +139,11 @@ int main(void)
         models[i] = glm::translate(glm::mat4(1.0f), glm::vec3(i%10 - 5.f, 0, i/10 - 5.f) * 3.f);
     }
 
-    uint32_t FBO;
-    GLCall(glGenFramebuffers(1, &FBO));
-    GLCall(glBindFramebuffer(GL_FRAMEBUFFER, FBO));
+    FrameBufferObject fbo;
+    frame_buffer_object_create(fbo);
 
-    uint32_t color_buffer;
-    GLCall(glGenTextures(1, &color_buffer));
-    GLCall(glBindTexture(GL_TEXTURE_2D, color_buffer));
-    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 2000, 1200, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
-    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ));
-    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    GLCall(glBindTexture(GL_TEXTURE_2D, 0));
-
-    GLCall(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_buffer, 0));
-
-    unsigned int RBO;
-    GLCall(glGenRenderbuffers(1, &RBO));
-    GLCall(glBindRenderbuffer(GL_RENDERBUFFER, RBO));
-    GLCall(glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, 2000, 1200));
-    GLCall(glBindRenderbuffer(GL_RENDERBUFFER, 0));
-
-    GLCall(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, RBO));
-
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-    {
-        std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
-        exit(EXIT_FAILURE);
-    }
-    GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-
-    uint32_t mouse_pixel_color;
-    GLCall(glGenTextures(1, &mouse_pixel_color));
-    GLCall(glBindTexture(GL_TEXTURE_2D, mouse_pixel_color));
-    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
-    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ));
-    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-    GLCall(glBindTexture(GL_TEXTURE_2D, 0));
+    uint32_t mouse_pixel_color_texture_id;
+    texture_create(&mouse_pixel_color_texture_id, 1, 1, 3);
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -222,7 +192,7 @@ int main(void)
         glm::mat4 view = get_view_matrix(camera);
         glm::mat4 vp = projection * view;
 
-        GLCall(glBindFramebuffer(GL_FRAMEBUFFER, FBO));
+        frame_buffer_object_bind(fbo);
         GLCall(glViewport(0, 0, width, height));
         GLCall(glClearColor(1.f, 1.f, 1.f, 1.f));
         GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
@@ -234,7 +204,7 @@ int main(void)
             game_object_draw(spheres[i], uid_mat, vp * models[i], models[i], camera._eye);
         }
         glm::vec3 mouseRGB(0.f);
-        GLCall(glBindTexture(GL_TEXTURE_2D, mouse_pixel_color));
+        texture_bind(mouse_pixel_color_texture_id);
         GLCall(glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mouse_state.x, height - mouse_state.y, 1, 1, 0));
         GLCall(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (float*)&mouseRGB));
 

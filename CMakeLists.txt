@@ -103,14 +103,16 @@ file(GLOB imgui_SRC
 add_executable(tolmak
   src/main.cpp
 
-  src/mesh_io.cpp include/mesh_io.h
-  src/shader.cpp include/shader.h
-  src/texture.cpp include/texture.h
-  src/light.cpp include/light.h
-  src/mesh.cpp include/mesh.h
+  include/mesh_io.h           src/mesh_io.cpp
+  include/shader.h            src/shader.cpp
+  include/texture.h           src/texture.cpp
+  include/light.h             src/light.cpp
+  include/mesh.h              src/mesh.cpp
+  include/game_object.h       src/game_object.cpp
+
   include/orbit_camera.h
-  # include/material.h
   include/materials.h
+  include/frame_buffer.h
   include/common.h
 
   ext/glad/src/glad.c
