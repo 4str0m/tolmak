@@ -104,6 +104,7 @@ int main(void)
     ImGui_ImplOpenGL3_Init(glsl_version);
     
     lights_init();
+    textures_init();
  
     GLCall(glEnable(GL_DEPTH_TEST));
     GLCall(glFrontFace(GL_CCW));
