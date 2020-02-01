@@ -5,13 +5,16 @@
 
 struct Mesh
 {
+    char file_path[MAX_PATH_LENGTH];
     uint32_t VAO, VBO, EBO;
     uint32_t indices_count;
 };
 
-void mesh_bind(const Mesh& mesh);
-void mesh_from_mesh_data(const MeshData& mesh_data, Mesh& mesh);
-void mesh_draw(const Mesh& mesh);
+extern std::vector<Mesh> meshes;
+
+void mesh_create(uint32_t *mesh_id, const char *file_path);
+void mesh_bind(uint32_t mesh_id);
+void mesh_draw(uint32_t mesh_id);
 
 struct VertexAttribs
 {
@@ -28,4 +31,4 @@ struct VertexAttribs
 };
 
 void vertex_attribs_append(VertexAttribs& attribs, int size, GLenum type, GLboolean normalized = GL_FALSE);
-void vertex_attribs_enable_all(const VertexAttribs& attribs, const Mesh& mesh);
+void vertex_attribs_enable_all(const VertexAttribs& attribs, uint32_t mesh_id);

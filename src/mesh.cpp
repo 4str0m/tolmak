@@ -1,12 +1,34 @@
 #include <mesh.h>
 
-void mesh_bind(const Mesh& mesh)
+std::vector<Mesh> meshes;
+
+void mesh_bind(uint32_t mesh_id)
 {
+    const Mesh& mesh = meshes[mesh_id];
     GLCall(glBindVertexArray(mesh.VAO));
 }
 
-void mesh_from_mesh_data(const MeshData& mesh_data, Mesh& mesh)
+void mesh_create(uint32_t *mesh_id, const char *file_path)
 {
+    size_t file_path_len = strlen(file_path);
+    if (file_path_len > MAX_PATH_LENGTH)
+    {
+        std::cout << "Error: file path too long: " << file_path << std::endl;
+        exit(EXIT_FAILURE); 
+    }
+
+    for (uint32_t i = 0; i < meshes.size(); ++i)
+    {
+        if (!strncmp(file_path, meshes[i].file_path, MAX_PATH_LENGTH))
+        {
+            *mesh_id = i;
+            return;
+        }
+    }
+    MeshData mesh_data;
+    obj_load(mesh_data, file_path);
+
+    Mesh mesh;
     GLCall(glGenVertexArrays(1, &mesh.VAO));
     GLCall(glGenBuffers(1, &mesh.VBO));
     GLCall(glBindVertexArray(mesh.VAO));
@@ -16,11 +38,18 @@ void mesh_from_mesh_data(const MeshData& mesh_data, Mesh& mesh)
     GLCall(glGenBuffers(1, &mesh.EBO));
     GLCall(glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mesh.EBO));
     GLCall(glBufferData(GL_ELEMENT_ARRAY_BUFFER, mesh_data.indices.size() * sizeof(uint32_t), mesh_data.indices.data(), GL_STATIC_DRAW));
+
     mesh.indices_count = mesh_data.indices.size();
+    memset(mesh.file_path, 0, MAX_PATH_LENGTH);
+    strncpy(mesh.file_path, file_path, file_path_len);
+
+    meshes.emplace_back(mesh);
+    *mesh_id = meshes.size()-1;
 }
 
-void mesh_draw(const Mesh& mesh)
+void mesh_draw(uint32_t mesh_id)
 {
+    const Mesh& mesh = meshes[mesh_id];
     GLCall(glBindVertexArray(mesh.VAO));
 
     GLCall(glDrawElements(
@@ -37,9 +66,9 @@ void vertex_attribs_append(VertexAttribs& attribs, int size, GLenum type, GLbool
     attribs.total_size += size * size_of_gl_type(type);
 }
 
-void vertex_attribs_enable_all(const VertexAttribs& attribs, const Mesh& mesh)
+void vertex_attribs_enable_all(const VertexAttribs& attribs, uint32_t mesh_id)
 {
-    mesh_bind(mesh);
+    mesh_bind(mesh_id);
     for (uint32_t i = 0; i < attribs.attribs.size(); ++i)
     {
         const VertexAttribs::VertexAttrib attrib = attribs.attribs[i];

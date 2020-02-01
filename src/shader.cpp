@@ -21,16 +21,32 @@ void shader_bind(uint32_t shader_id)
     GLCall(glUseProgram(shaders[shader_id].program));
 }
 
-bool shader_load(uint32_t* shader_id, const char* file_name)
-{    
-    FILE* shader_file = fopen(file_name, "r");
+bool shader_load(uint32_t* shader_id, const char* file_path)
+{
+    size_t file_path_len = strlen(file_path);
+    if (file_path_len > MAX_PATH_LENGTH)
+    {
+        std::cout << "Error: file path too long: " << file_path << std::endl;
+        exit(EXIT_FAILURE); 
+    }
+
+    for (uint32_t i = 0; i < shaders.size(); ++i)
+    {
+        if (!strncmp(file_path, shaders[i].file_path, MAX_PATH_LENGTH))
+        {
+            *shader_id = i;
+            return true;
+        }
+    }
+
+    FILE* shader_file = fopen(file_path, "r");
 
     if (!shader_file) {
         std::cout << "ERROR: could not load shader file." << std::endl;
         return false;
     }
 
-    std::cout << "Loading \"" << file_name << "\" .. ";
+    std::cout << "Loading \"" << file_path << "\" .. ";
 
     enum State
     {
@@ -113,7 +129,13 @@ bool shader_load(uint32_t* shader_id, const char* file_name)
         return false;
     }
 
-    shaders.push_back({ program, std::unordered_map<std::string, int>() });
+    Shader shader;
+    shader.program = program;
+
+    memset(shader.file_path, 0, MAX_PATH_LENGTH);
+    strncpy(shader.file_path, file_path, file_path_len);
+
+    shaders.emplace_back(shader);
     *shader_id = shaders.size()-1;
 
     std::cout << " done." << std::endl;

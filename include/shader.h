@@ -4,6 +4,7 @@
 
 struct Shader
 {
+    char file_path[MAX_PATH_LENGTH];
     uint32_t program = 0;
     std::unordered_map<std::string, int> uniform_locations;
 };
@@ -14,8 +15,6 @@ bool shader_load(uint32_t* shader_id, const char* file_name);
 void shader_bind(uint32_t shader_id);
 
 static inline int shader_find_loc(uint32_t shader_id, const char* uniform_name);
-
-
 
 #define SHADER_SET_UNIFORM(type, postfix1, postfix2, ...)\
 inline void shader_set_uniform_##postfix1(uint32_t shader_id, const char* uniform_name, const type& v) {\

@@ -23,6 +23,8 @@
 #define QUARTER_PI 0.785398163f
 #define TWO_PI 6.283185307f
 
+#define MAX_PATH_LENGTH 256
+
 #define GLCall(x)\
     do {\
         GL_clear_errors();\

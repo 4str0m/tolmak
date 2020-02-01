@@ -7,15 +7,13 @@
 PointLight point_lights[N_POINT_LIGHTS];
 
 static LightMaterial light_mat;
-static Mesh light_mesh;
+static uint32_t light_mesh;
 
 void lights_init()
 {
     material_create(light_mat);
 
-    MeshData mesh_data;
-    obj_load(mesh_data, "../resources/meshes/sphere.obj");
-    mesh_from_mesh_data(mesh_data, light_mesh);
+    mesh_create(&light_mesh, "../resources/meshes/sphere.obj");
 
     VertexAttribs attribs;
     vertex_attribs_append(attribs, 3, GL_FLOAT);

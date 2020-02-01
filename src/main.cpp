@@ -9,6 +9,7 @@
 #include <mesh.h>
 #include <materials.h>
 #include <light.h>
+#include <game_object.h>
 
 OrbitCamera camera = {
 	glm::vec3(0.f,  0.f, 0.f),
@@ -118,19 +119,22 @@ int main(void)
     PlainColorMaterial plain_color;
     material_create(plain_color);
 
-    Mesh sphere;
-    {
-        MeshData mesh_data;
-        obj_load(mesh_data, "../resources/meshes/sphere_hres.obj");
-        mesh_from_mesh_data(mesh_data, sphere);
+    PlainColorMaterial uid_mat;
+    material_create(uid_mat);
 
-        VertexAttribs attribs;
-        vertex_attribs_append(attribs, 3, GL_FLOAT);
-        vertex_attribs_append(attribs, 2, GL_FLOAT);
-        vertex_attribs_append(attribs, 3, GL_FLOAT);
-        vertex_attribs_append(attribs, 3, GL_FLOAT);
-        vertex_attribs_append(attribs, 3, GL_FLOAT);
-        vertex_attribs_enable_all(attribs, sphere);
+    const uint32_t sphere_count = 100;
+    GameObject spheres[sphere_count];
+    glm::vec3 uid_colors[sphere_count];
+    glm::mat4 models[sphere_count];
+    for (uint32_t i = 0; i < sphere_count; ++i)
+    {
+        game_object_create(spheres[i], "../resources/meshes/sphere_hres.obj");
+        uid_colors[i] = glm::vec3(
+            spheres[i].uid / 256.f,
+            (spheres[i].uid >> 8) / 256.f,
+            (spheres[i].uid >> 16) / 256.f
+        );
+        models[i] = glm::translate(glm::mat4(1.0f), glm::vec3(i%10 - 5.f, 0, i/10 - 5.f) * 3.f);
     }
 
     uint32_t FBO;
@@ -161,6 +165,14 @@ int main(void)
         exit(EXIT_FAILURE);
     }
     GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+
+    uint32_t mouse_pixel_color;
+    GLCall(glGenTextures(1, &mouse_pixel_color));
+    GLCall(glBindTexture(GL_TEXTURE_2D, mouse_pixel_color));
+    GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR ));
+    GLCall(glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -203,47 +215,60 @@ int main(void)
         // Rendering
         ImGui::Render();
 
-        GLCall(glBindFramebuffer(GL_FRAMEBUFFER, FBO));
-        GLCall(glViewport(0, 0, width, height));
-        GLCall(glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w));
-        GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
-        GLCall(glEnable(GL_DEPTH_TEST));
-
         camera.aspect_ratio = aspect_ratio;
         glm::mat4 projection = get_projection_matrix(camera);
         glm::mat4 view = get_view_matrix(camera);
-        glm::mat4 model = glm::mat4(1.0f);
-        glm::mat4 mvp = projection * view * model;
+        glm::mat4 vp = projection * view;
+
+        GLCall(glBindFramebuffer(GL_FRAMEBUFFER, FBO));
+        GLCall(glViewport(0, 0, width, height));
+        GLCall(glClearColor(1.f, 1.f, 1.f, 1.f));
+        GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+        GLCall(glEnable(GL_DEPTH_TEST));
+
+        for (uint32_t i = 0; i < sphere_count; ++i)
+        {
+            uid_mat.tint = uid_colors[i];
+            game_object_draw(spheres[i], uid_mat, vp * models[i], models[i], camera._eye);
+        }
+        glm::vec3 mouseRGB(0.f);
+        GLCall(glBindTexture(GL_TEXTURE_2D, mouse_pixel_color));
+        GLCall(glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mouse_state.x, height - mouse_state.y, 1, 1, 0));
+        GLCall(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (float*)&mouseRGB));
+
+        GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+        GLCall(glViewport(0, 0, width, height));
+        GLCall(glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w));
+        GLCall(glStencilMask(0xFF));
+        GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+        GLCall(glEnable(GL_DEPTH_TEST));
 
         GLCall(glEnable(GL_STENCIL_TEST));
         GLCall(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE));
 
-        GLCall(glStencilFunc(GL_ALWAYS, 1, 0xFF));
         GLCall(glStencilMask(0xFF));
-        material_use(phong, mvp, model, camera._eye);
-        mesh_draw(sphere);
+        for (uint32_t i = 0; i < sphere_count; ++i)
+        {
+            game_object_draw(spheres[i], phong, vp * models[i], models[i], camera._eye);
+        }
 
         GLCall(glDisable(GL_DEPTH_TEST));
         GLCall(glStencilFunc(GL_NOTEQUAL, 1, 0xFF));
         GLCall(glStencilMask(0x00));
-        model = glm::scale(model, glm::vec3(1.01f));
-        mvp = projection * view * model;
-        material_use(plain_color, mvp, model, camera._eye);
-        mesh_draw(sphere);
-        GLCall(glStencilMask(0xFF));
 
-        GLCall(glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, mouse_state.x, mouse_state.y, 1, 1, 0));
-        glm::vec3 mouseRGB(0.f);
-        GLCall(glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_FLOAT, (float*)&mouseRGB));
-        std::cout << mouseRGB.x << " " << mouseRGB.y << " " << mouseRGB.z << std::endl;
+        const float threshold = .5f / 256.f;
+        for (uint32_t i = 0; i < sphere_count; ++i)
+        {
+            glm::vec3 uid = glm::abs(mouseRGB - uid_colors[i]);
+            if (uid.x < threshold && uid.y < threshold && uid.z < threshold) {
+                glm::mat4 model_scale = glm::scale(models[i], glm::vec3(1.1f));
+                game_object_draw(spheres[i], plain_color, vp * model_scale, model_scale, camera._eye);
+            }
+        }
 
-        // GLCall(glDisable(GL_STENCIL_TEST));
-
-        GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-        GLCall(glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w));
-        GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
-        GLCall(glEnable(GL_DEPTH_TEST));
+        GLCall(glStencilFunc(GL_ALWAYS, 1, 0xFF));
         GLCall(glDisable(GL_STENCIL_TEST));
+
         lights_draw(projection * view);
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
