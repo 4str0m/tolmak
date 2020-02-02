@@ -63,7 +63,7 @@ inline glm::mat4 get_view_matrix(Camera& camera)
     return glm::lookAt(camera.eye, camera.eye + camera.forward, camera.up);
 }
 
-inline void camera_update(Camera& camera, const KeyboardState &keyboard_state)
+inline void camera_update(Camera& camera)
 {
     if (keyboard_state.action[GLFW_KEY_UP] || keyboard_state.action[GLFW_KEY_W])
         camera.eye += camera.forward * camera.speed;
@@ -87,7 +87,7 @@ inline void camera_update(Camera& camera, const KeyboardState &keyboard_state)
     }
 }
 
-inline void camera_handle_mouse_move(Camera& camera, MouseState mouse_state)
+inline void camera_handle_mouse_move(Camera& camera)
 {
     if (camera.free_flying) {
         camera.theta = glm::clamp(camera.theta - mouse_state.dy * .002f, -HALF_PI + .01f, HALF_PI - .01f);

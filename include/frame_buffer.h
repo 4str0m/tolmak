@@ -29,7 +29,7 @@ inline void frame_buffer_object_create(FrameBufferObject& fbo)
     GLCall(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, render_buffer_id));
 
     if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        LOG(ERROR, "unable to completely create framebuffer.")
+        LOG(ERROR, "unable to completely create framebuffer.");
     GLCall(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 
     fbo.renderer_id         = renderer_id;

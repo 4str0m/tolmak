@@ -13,8 +13,6 @@
 #include <frame_buffer.h>
 
 Camera camera;
-static MouseState mouse_state;
-static KeyboardState keyboard_state;
 
 static void error_callback(int error, const char* description)
 {
@@ -46,7 +44,7 @@ static void cursor_position_callback(GLFWwindow* window, double xpos, double ypo
     mouse_state.x = xpos;
     mouse_state.y = ypos;
     
-    camera_handle_mouse_move(camera, mouse_state);
+    camera_handle_mouse_move(camera);
 }
 
 static void mouse_button_callback(GLFWwindow* window, int button, int action, int mods) {
@@ -147,7 +145,7 @@ int main(void)
 
     while (!glfwWindowShouldClose(window))
     {
-        camera_update(camera, keyboard_state);
+        camera_update(camera);
 
         float aspect_ratio;
         int width, height;

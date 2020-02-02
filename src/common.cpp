@@ -1,5 +1,8 @@
 #include <common.h>
 
+MouseState mouse_state;
+KeyboardState keyboard_state;
+
 static const char* log_level_str[] = {
     "INFO",
     "SUCCESS",

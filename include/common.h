@@ -59,12 +59,13 @@ struct MouseState
     int action[GLFW_MOUSE_BUTTON_LAST];
     int mods[GLFW_MOUSE_BUTTON_LAST];
 };
-
 struct KeyboardState
 {
     int action[GLFW_KEY_LAST];
     int mods[GLFW_KEY_LAST];
 };
+extern MouseState mouse_state;
+extern KeyboardState keyboard_state;
 
 inline void GL_clear_errors() { while(glGetError()); }
 
