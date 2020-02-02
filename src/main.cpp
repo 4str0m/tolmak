@@ -64,9 +64,8 @@ int main(void)
  
     glfwSetErrorCallback(error_callback);
  
-    if (!glfwInit()) {
-        exit(EXIT_FAILURE);
-    }
+    if (!glfwInit())
+        LOG(ERROR, "failed to initialize GLFW.");
     
     const char* glsl_version = "#version 460";
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
@@ -76,7 +75,7 @@ int main(void)
     if (!window)
     {
         glfwTerminate();
-        exit(EXIT_FAILURE);
+        LOG(ERROR, "failed to create window.");
     }
  
     glfwSetKeyCallback(window, key_callback);
@@ -86,10 +85,7 @@ int main(void)
  
     glfwMakeContextCurrent(window);
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
-    {
-        std::cout << "Failed to initialize GLAD" << std::endl;
-        return -1;
-    }
+        LOG(ERROR, "failed to initialize GLAD.");
     glfwSwapInterval(1);
 
     // Setup Dear ImGui context
@@ -236,7 +232,8 @@ int main(void)
         for (uint32_t i = 0; i < sphere_count; ++i)
         {
             glm::vec3 uid = glm::abs(mouseRGB - uid_colors[i]);
-            if (uid.x < threshold && uid.y < threshold && uid.z < threshold) {
+            if (uid.x < threshold && uid.y < threshold && uid.z < threshold)
+            {
                 glm::mat4 model_scale = glm::scale(models[i], glm::vec3(1.f + outline_size));
                 game_object_draw(spheres[i], plain_color, vp * model_scale, model_scale, camera.eye);
             }
@@ -254,6 +251,9 @@ int main(void)
     }
 
     // Cleanup
+    shaders_terminate();
+    textures_terminate();
+
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplGlfw_Shutdown();
     ImGui::DestroyContext();

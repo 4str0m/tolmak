@@ -63,7 +63,8 @@ uniform float specularity;
 %Range(0.0, 1.0, 0.5)
 uniform float bump_strength;
 
-vec3 point_light(PointLight point_light, vec3 normal, vec3 object_color, float object_specular) {
+vec3 point_light(PointLight point_light, vec3 normal, vec3 object_color, float object_specular)
+{
     vec3 pos_to_light = normalize(point_light.pos - tangent_position);
     float diff = max(dot(pos_to_light, normal), 0.0f);
     vec3 diffuse = diff * object_color * point_light.color * tint;
@@ -87,9 +88,8 @@ void main()
     vec3 ambient = 0.1 * object_color;
 
     vec3 color = ambient;
-    for(unsigned int i = 0; i < N_POINT_LIGHTS; ++i) {
+    for(unsigned int i = 0; i < N_POINT_LIGHTS; ++i)
         color += point_light(tangent_point_lights[i], normal, object_color, object_specular);
-    }
 
     output_color = vec4(color, 1.0);
 };

@@ -4,17 +4,27 @@
 
 std::vector<Shader> shaders;
 
-static const char* common_uniforms =
-"#version 460\n"
-"#define N_POINT_LIGHTS 10u\n"
-"uniform mat4 MVP;\n"
-"uniform mat4 M;\n"
-"uniform vec3 EYE;\n"
-"struct PointLight {\n"
-"    vec3 pos;\n"
-"    vec3 color;\n"
-"};\n"
-"uniform PointLight point_lights[N_POINT_LIGHTS];\n";
+static const char* common_uniforms = R"(
+#version 460
+
+#define N_POINT_LIGHTS 10u
+
+uniform mat4 MVP;
+uniform mat4 M;
+uniform vec3 EYE;
+
+struct PointLight {
+    vec3 pos;
+    vec3 color;
+};
+uniform PointLight point_lights[N_POINT_LIGHTS];
+)";
+
+void shaders_terminate()
+{
+    for (uint32_t i = 0; i < shaders.size(); ++i)
+        GLCall(glDeleteProgram(shaders[i].program));
+}
 
 void shader_bind(uint32_t shader_id)
 {
@@ -27,8 +37,10 @@ bool shader_load(uint32_t* shader_id, const char* file_path)
 
     ASSERT(file_path_len < MAX_PATH_LENGTH, "file path too long: \"%s\".", file_path);
 
-    for (uint32_t i = 0; i < shaders.size(); ++i) {
-        if (!strncmp(file_path, shaders[i].file_path, MAX_PATH_LENGTH)) {
+    for (uint32_t i = 0; i < shaders.size(); ++i)
+    {
+        if (!strncmp(file_path, shaders[i].file_path, MAX_PATH_LENGTH))
+        {
             *shader_id = i;
             return true;
         }
@@ -61,13 +73,17 @@ bool shader_load(uint32_t* shader_id, const char* file_path)
     char line[512];
     size_t len = 512;
     bool has_geometry_shader = false;
-    while (fgets(line, len, shader_file) != nullptr) {
+    while (fgets(line, len, shader_file) != nullptr)
+    {
         if (line[0] == '%')
             continue;
 
-        if      (strstr(line, "#VERTEX#"))       state = VERT;
-        else if (strstr(line, "#FRAGMENT#"))     state = FRAG;
-        else if (strstr(line, "#GEOMETRY#")) {
+        if      (strstr(line, "#VERTEX#"))
+            state = VERT;
+        else if (strstr(line, "#FRAGMENT#"))
+            state = FRAG;
+        else if (strstr(line, "#GEOMETRY#"))
+        {
             state = GEOM;
             has_geometry_shader = true;
         }
@@ -78,7 +94,8 @@ bool shader_load(uint32_t* shader_id, const char* file_path)
 
     GLuint shader_programs[STATE_COUNT];
 
-    for (int i = 0; i < STATE_COUNT; ++i) {
+    for (int i = 0; i < STATE_COUNT; ++i)
+    {
         if (i == GEOM && !has_geometry_shader)
             continue;
         
@@ -109,7 +126,8 @@ bool shader_load(uint32_t* shader_id, const char* file_path)
     int success;
     char info_log[512];
     glGetProgramiv(program, GL_LINK_STATUS, &success);
-    if(!success) {
+    if(!success)
+    {
         glGetProgramInfoLog(program, 512, NULL, info_log);
         LOG(ERROR, "shader program linking failed [%s]: %s", file_path, info_log);
     }

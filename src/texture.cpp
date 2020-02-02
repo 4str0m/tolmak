@@ -20,6 +20,12 @@ void textures_init()
     texture_create(&default_texture_id, 1, 1, 3, &default_color);
 }
 
+void textures_terminate()
+{
+    for (uint32_t i = 0; i < textures.size(); ++i)
+        GLCall(glDeleteTextures(1, &textures[i].renderer_id));
+}
+
 void texture_create(uint32_t* texture_id, int width, int height, int n_channels, const void* data)
 {
     uint32_t renderer_id;
@@ -62,13 +68,16 @@ bool texture_load(uint32_t* texture_id, const char* file_path)
     // load and generate the texture
     int width, height, n_channels;
     unsigned char *data = stbi_load(file_path, &width, &height, &n_channels, 0);
-    if (data) {
+    if (data)
+    {
         if (n_channels != 3)
             LOG(ERROR, "number of channels not supported (%d != 3): \"%s\".", n_channels, file_path);
 
         GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data));
         GLCall(glGenerateMipmap(GL_TEXTURE_2D));
-    } else {
+    }
+    else
+    {
         LOG(WARNING, "failed to load texture: \"%s\".", file_path);
         *texture_id = default_texture_id;
         return false;

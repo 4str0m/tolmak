@@ -11,13 +11,16 @@ struct Shader
 
 extern std::vector<Shader> shaders;
 
+void shaders_terminate();
+
 bool shader_load(uint32_t* shader_id, const char* file_name);
 void shader_bind(uint32_t shader_id);
 
 static inline int shader_find_loc(uint32_t shader_id, const char* uniform_name);
 
 #define SHADER_SET_UNIFORM(type, postfix1, postfix2, ...)\
-inline void shader_set_uniform_##postfix1(uint32_t shader_id, const char* uniform_name, const type& v) {\
+inline void shader_set_uniform_##postfix1(uint32_t shader_id, const char* uniform_name, const type& v)\
+{\
     int loc = shader_find_loc(shader_id, uniform_name);\
     GLCall(glUniform##postfix2(loc, __VA_ARGS__));\
 }
@@ -44,8 +47,6 @@ static inline int shader_find_loc(uint32_t shader_id, const char* uniform_name)
         shader.uniform_locations[uniform_name] = loc;
     }
     else
-    {
         loc = shader.uniform_locations[uniform_name];
-    }
     return loc;
 }

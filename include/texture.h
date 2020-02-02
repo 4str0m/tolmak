@@ -14,6 +14,7 @@ struct Texture
 extern std::vector<Texture> textures;
 
 void textures_init();
+void textures_terminate();
 
 void texture_create(uint32_t* texture_id, int width, int height, int n_channels, const void* data = nullptr);
 bool texture_load(uint32_t* texture_id, const char* file_path);
