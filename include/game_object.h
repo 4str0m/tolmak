@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common.h>
+#include <transform.h>
 
 static uint32_t UID = 1;
 
@@ -8,6 +9,7 @@ struct GameObject
 {
     uint32_t uid;
     uint32_t mesh_id;
+    Transform transform;
 };
 
 
@@ -28,12 +30,12 @@ inline void game_object_create(GameObject& game_object, const char* obj_file_pat
 
 template<typename Material>
 inline void game_object_draw(
-    const GameObject& game_object,
+    GameObject& game_object,
     Material& mat,
-    const glm::mat4& MVP,
-    const glm::mat4& M,
+    const glm::mat4& VP,
     const glm::vec3& EYE)
 {
-    material_use(mat, MVP, M, EYE);
+    const glm::mat4& M = transform_get_model(game_object.transform);
+    material_use(mat, VP * M, M, EYE);
     mesh_draw(game_object.mesh_id);
 }

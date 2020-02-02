@@ -121,7 +121,6 @@ int main(void)
     const uint32_t sphere_count = 100;
     GameObject spheres[sphere_count];
     glm::vec3 uid_colors[sphere_count];
-    glm::mat4 models[sphere_count];
     float outline_size = .05f;
     for (uint32_t i = 0; i < sphere_count; ++i)
     {
@@ -131,7 +130,7 @@ int main(void)
             (spheres[i].uid >> 8) / 256.f,
             (spheres[i].uid >> 16) / 256.f
         );
-        models[i] = glm::translate(glm::mat4(1.0f), glm::vec3(i%10 - 5.f, 0, i/10 - 5.f) * 3.f);
+        transform_translate(spheres[i].transform, glm::vec3(i%10 - 5.f, 0, i/10 - 5.f) * 3.f);
     }
 
     FrameBufferObject fbo;
@@ -196,7 +195,10 @@ int main(void)
         for (uint32_t i = 0; i < sphere_count; ++i)
         {
             uid_mat.tint = uid_colors[i];
-            game_object_draw(spheres[i], uid_mat, vp * models[i], models[i], camera.eye);
+            // spheres[i].transform.scale = glm::vec3(std::sin((float)glfwGetTime()) * .5f + 1.f);
+            transform_translate(spheres[i].transform, glm::vec3(0.f, .01f*std::sin((float)glfwGetTime() + .1f*(spheres[i].transform.pos.x+spheres[i].transform.pos.z)), 0.f));
+            transform_rotate(spheres[i].transform, glm::vec3(0.f, 0.01f, 0.f));
+            game_object_draw(spheres[i], uid_mat, vp, camera.eye);
         }
         glm::vec3 mouseRGB(0.f);
         texture_bind(mouse_pixel_color_texture_id);
@@ -219,7 +221,7 @@ int main(void)
         GLCall(glStencilMask(0xFF));
         for (uint32_t i = 0; i < sphere_count; ++i)
         {
-            game_object_draw(spheres[i], phong, vp * models[i], models[i], camera.eye);
+            game_object_draw(spheres[i], phong, vp, camera.eye);
         }
 
         GLCall(glDisable(GL_DEPTH_TEST));
@@ -232,8 +234,9 @@ int main(void)
             glm::vec3 uid = glm::abs(mouseRGB - uid_colors[i]);
             if (uid.x < threshold && uid.y < threshold && uid.z < threshold)
             {
-                glm::mat4 model_scale = glm::scale(models[i], glm::vec3(1.f + outline_size));
-                game_object_draw(spheres[i], plain_color, vp * model_scale, model_scale, camera.eye);
+                transform_scale(spheres[i].transform, glm::vec3(1.f + outline_size));
+                game_object_draw(spheres[i], plain_color, vp, camera.eye);
+                transform_scale(spheres[i].transform, glm::vec3(1.f / (1.f + outline_size)));
             }
         }
 

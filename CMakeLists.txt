@@ -111,6 +111,7 @@ add_executable(tolmak
   include/game_object.h       src/game_object.cpp
   include/common.h            src/common.cpp
 
+  include/transform.h
   include/orbit_camera.h
   include/materials.h
   include/frame_buffer.h
