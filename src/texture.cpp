@@ -7,7 +7,7 @@
 
 static uint32_t default_texture_id = ~0;
 
-std::vector<Texture> textures;
+Array<Texture> textures;
 
 void textures_init()
 {
@@ -39,7 +39,7 @@ void texture_create(uint32_t* texture_id, int width, int height, int n_channels,
     GLCall(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data));
     GLCall(glBindTexture(GL_TEXTURE_2D, 0));
 
-    textures.push_back({{0}, width, height, n_channels, renderer_id});
+    textures.append({{0}, width, height, n_channels, renderer_id});
     *texture_id = textures.size()-1;
 }
 
@@ -84,7 +84,7 @@ bool texture_load(uint32_t* texture_id, const char* file_path)
     }
     stbi_image_free(data);
 
-    textures.push_back({{0}, width, height, n_channels, renderer_id});
+    textures.append({{0}, width, height, n_channels, renderer_id});
     *texture_id = textures.size()-1;
     
     LOG(SUCCESS, "finished loading texture: \"%s\".", file_path);

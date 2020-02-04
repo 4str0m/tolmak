@@ -10,7 +10,7 @@ struct Mesh
     uint32_t indices_count;
 };
 
-extern std::vector<Mesh> meshes;
+extern Array<Mesh> meshes;
 
 void mesh_create(uint32_t *mesh_id, const char *file_path);
 void mesh_bind(uint32_t mesh_id);
@@ -27,7 +27,7 @@ struct VertexAttribs
     };
 
     uint64_t total_size = 0;
-    std::vector<VertexAttrib> attribs;
+    Array<VertexAttrib> attribs;
 };
 
 void vertex_attribs_append(VertexAttribs& attribs, int size, GLenum type, GLboolean normalized = GL_FALSE);

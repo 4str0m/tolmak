@@ -9,7 +9,7 @@ struct Shader
     std::unordered_map<std::string, int> uniform_locations;
 };
 
-extern std::vector<Shader> shaders;
+extern Array<Shader> shaders;
 
 void shaders_terminate();
 

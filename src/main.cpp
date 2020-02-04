@@ -16,7 +16,7 @@ Camera camera;
 
 static void error_callback(int error, const char* description)
 {
-    fprintf(stderr, "Error: %s\n", description);
+    LOG(ERROR, description);
 }
  
 static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
@@ -124,7 +124,7 @@ int main(void)
     float outline_size = .05f;
     for (uint32_t i = 0; i < sphere_count; ++i)
     {
-        game_object_create(spheres[i], "../resources/meshes/sphere_hres.obj");
+        game_object_create(spheres[i], "../resources/meshes/cube.obj");
         uid_colors[i] = glm::vec3(
             spheres[i].uid / 256.f,
             (spheres[i].uid >> 8) / 256.f,

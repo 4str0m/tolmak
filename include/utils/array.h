@@ -1,43 +1,73 @@
 #pragma once
 
-#include <assert.h>
+#include <utils/log.h>
 
-// #define ARRAY_BOUND_CHECK
+#define ARRAY_BOUND_CHECK 0
 
 template<typename T>
 struct Array
 {
+    Array()
+    {
+        reserve(16);
+    }
+    ~Array()
+    {
+        free(m_data);
+        m_data = nullptr;
+        m_size = m_allocated = 0;
+    }
+
+
     inline const T& operator[](int i) const
     {
-#ifdef ARRAY_BOUND_CHECK
-        assert(i >= 0 && i < count);
+#if ARRAY_BOUND_CHECK == 1
+        ASSERT(i >= 0 && i < m_size, "array index out of bounds (%d not in [0, %u]).", i, m_size);
 #endif
-        return data[i];
+        return m_data[i];
     }
     inline T& operator[](int i)
     {
-#ifdef ARRAY_BOUND_CHECK
-        assert(i >= 0 && i < count);
+#if ARRAY_BOUND_CHECK == 1
+        ASSERT(i >= 0 && i < m_size, "array index out of bounds (%d not in [0, %u]).", i, m_size);
 #endif
-        return data[i];
+        return m_data[i];
     }
 
     inline void append(const T& t)
     {
-        if (count >= allocated)
-        {
-            reserve(allocated<<1);
-            allocated <<= 1;
-        }
+        if (m_size >= m_allocated)
+            reserve(m_allocated<<1);
+
+        m_data[m_size] = t;
+        ++m_size;
     }
 
-    inline void reserve(uint32_t count)
+    inline void reserve(uint32_t size)
     {
-        data = reallocarray(data, count, sizeof(T));
+        T* new_data = (T*)reallocarray(m_data, size, sizeof(T));
+        if (!new_data)
+            LOG(ERROR, "not able to reserve %u elements for array.", size);
+        m_data = new_data;
+        m_allocated = size;
     }
+
+    inline bool empty() const { return m_size == 0; }
+    inline void clear() { m_size = 0; }
+
+    inline T pop()
+    {
+#if ARRAY_BOUND_CHECK == 1
+        ASSERT(m_size > 0, "cannot pop element from empty array.");
+#endif
+        return m_data[--m_size];
+    }
+
+    inline uint32_t size() const { return m_size; }
+    inline const T* data() const { return m_data; }
 
 private:
-    T* data = nullptr;
-    uint32_t count = 0;
-    uint32_t allocated = 0;
+    T* m_data = nullptr;
+    uint32_t m_size = 0;
+    uint32_t m_allocated = 0;
 };

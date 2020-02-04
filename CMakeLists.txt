@@ -110,6 +110,7 @@ add_executable(tolmak
   include/mesh.h              src/mesh.cpp
   include/game_object.h       src/game_object.cpp
   include/common.h            src/common.cpp
+  include/utils/log.h         src/utils/log.cpp
 
   include/transform.h
   include/orbit_camera.h

@@ -11,7 +11,7 @@ struct Texture
     uint32_t renderer_id;
 };
 
-extern std::vector<Texture> textures;
+extern Array<Texture> textures;
 
 void textures_init();
 void textures_terminate();

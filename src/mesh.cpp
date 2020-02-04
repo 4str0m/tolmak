@@ -1,6 +1,6 @@
 #include <mesh.h>
 
-std::vector<Mesh> meshes;
+Array<Mesh> meshes;
 
 void mesh_bind(uint32_t mesh_id)
 {
@@ -37,7 +37,7 @@ void mesh_create(uint32_t *mesh_id, const char *file_path)
     memset(mesh.file_path, 0, MAX_PATH_LENGTH);
     strncpy(mesh.file_path, file_path, file_path_len);
 
-    meshes.emplace_back(mesh);
+    meshes.append(mesh);
     *mesh_id = meshes.size()-1;
 }
 
@@ -56,7 +56,7 @@ void mesh_draw(uint32_t mesh_id)
 
 void vertex_attribs_append(VertexAttribs& attribs, int size, GLenum type, GLboolean normalized)
 {
-    attribs.attribs.push_back({size, type, normalized, (void*) attribs.total_size});
+    attribs.attribs.append({size, type, normalized, (void*) attribs.total_size});
     attribs.total_size += size * size_of_gl_type(type);
 }
 

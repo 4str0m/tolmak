@@ -2,7 +2,7 @@
 
 #include <sstream>
 
-std::vector<Shader> shaders;
+Array<Shader> shaders;
 
 static const char* common_uniforms = R"(
 #version 460
@@ -138,7 +138,7 @@ bool shader_load(uint32_t* shader_id, const char* file_path)
     memset(shader.file_path, 0, MAX_PATH_LENGTH);
     strncpy(shader.file_path, file_path, file_path_len);
 
-    shaders.emplace_back(shader);
+    shaders.append(shader);
     *shader_id = shaders.size()-1;
 
     LOG(SUCCESS, "finished loading shader: \"%s\".", file_path);
