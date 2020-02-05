@@ -39,11 +39,11 @@ void obj_load(MeshData& mesh, const char *file_path) {
         LOG(ERROR, "invalid file path: \"%s\".", file_path);
     }
 
-    std::vector<glm::vec3>   positions;
-    std::vector<glm::vec2>   texcoords;
-    std::vector<glm::vec3>   normals;
-    std::vector<uint32_t>   indices;
-    std::vector<obj_vertex> vertices;
+    Array<glm::vec3>   positions;
+    Array<glm::vec2>   texcoords;
+    Array<glm::vec3>   normals;
+    Array<uint32_t>   indices;
+    Array<obj_vertex> vertices;
     VertexMap vertexMap;
 
     char line[256];
@@ -63,17 +63,17 @@ void obj_load(MeshData& mesh, const char *file_path) {
             glm::vec3 p;
             if (sscanf(rest, "%f %f %f", &p.x, &p.y, &p.z) != 3)
                 LOG(ERROR, "invalid vertex position: \"%s\" [%s:%d].", line_bk, file_path, line_number);
-            positions.push_back(p);
+            positions.append(p);
         } else if (!strncmp(prefix, "vt", prefix_length)) {
             glm::vec2 tc;
             if (sscanf(rest, "%f %f", &tc.x, &tc.y) != 2)
                 LOG(ERROR, "invalid texture coordinate: \"%s\" [%s:%d].", line_bk, file_path, line_number);
-            texcoords.push_back(tc);
+            texcoords.append(tc);
         } else if (!strncmp(prefix, "vn", prefix_length)) {
             glm::vec3 n;
             if (sscanf(rest, "%f %f %f", &n.x, &n.y, &n.z) != 3)
                 LOG(ERROR, "invalid vertex normal: \"%s\" [%s:%d].", line_bk, file_path, line_number);
-            normals.push_back(n);
+            normals.append(n);
         } else if (!strncmp(prefix, "f", prefix_length)) {
             char v1[64], v2[64], v3[64], v4[64];
             int count = 0;
@@ -100,10 +100,10 @@ void obj_load(MeshData& mesh, const char *file_path) {
                 VertexMap::const_iterator it = vertexMap.find(v);
                 if (it == vertexMap.end()) {
                     vertexMap[v] = (uint32_t) vertices.size();
-                    indices.push_back((uint32_t) vertices.size());
-                    vertices.push_back(v);
+                    indices.append((uint32_t) vertices.size());
+                    vertices.append(v);
                 } else {
-                    indices.push_back(it->second);
+                    indices.append(it->second);
                 }
             }
         }
@@ -114,9 +114,9 @@ void obj_load(MeshData& mesh, const char *file_path) {
 
     mesh.vertices.resize(vertices.size());
     for (uint32_t i = 0; i < vertices.size(); ++i) {
-        mesh.vertices[i].pos    = positions.at(vertices[i].p-1);
-        mesh.vertices[i].uv     = texcoords.at(vertices[i].uv-1);
-        mesh.vertices[i].normal = normals.at(vertices[i].n-1);
+        mesh.vertices[i].pos    = positions[vertices[i].p-1];
+        mesh.vertices[i].uv     = texcoords[vertices[i].uv-1];
+        mesh.vertices[i].normal = normals[vertices[i].n-1];
     }
 
     // compute tangent and bitangent vactor for each triangle

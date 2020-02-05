@@ -13,8 +13,8 @@ struct MeshData
         glm::vec3 bitangent = glm::vec3(0.f);
     };
 
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
+    Array<Vertex> vertices;
+    Array<uint32_t> indices;
 };
 
 void obj_load(MeshData& mesh, const char *filename);

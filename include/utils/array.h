@@ -52,6 +52,12 @@ struct Array
         m_allocated = size;
     }
 
+    inline void resize(uint32_t size)
+    {
+        reserve(size);
+        m_size = size;
+    }
+
     inline bool empty() const { return m_size == 0; }
     inline void clear() { m_size = 0; }
 
@@ -65,6 +71,7 @@ struct Array
 
     inline uint32_t size() const { return m_size; }
     inline const T* data() const { return m_data; }
+    inline T* data() { return m_data; }
 
 private:
     T* m_data = nullptr;

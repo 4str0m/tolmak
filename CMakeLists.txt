@@ -112,6 +112,9 @@ add_executable(tolmak
   include/common.h            src/common.cpp
   include/utils/log.h         src/utils/log.cpp
 
+  include/utils/array.h
+  include/utils/bucket_allocator.h
+
   include/transform.h
   include/orbit_camera.h
   include/materials.h
