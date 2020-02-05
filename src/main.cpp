@@ -196,8 +196,8 @@ int main(void)
         {
             uid_mat.tint = uid_colors[i];
             // spheres[i].transform.scale = glm::vec3(std::sin((float)glfwGetTime()) * .5f + 1.f);
-            transform_translate(spheres[i].transform, glm::vec3(0.f, .01f*std::sin((float)glfwGetTime() + .1f*(spheres[i].transform.pos.x+spheres[i].transform.pos.z)), 0.f));
-            transform_rotate(spheres[i].transform, glm::vec3(0.f, 0.01f, 0.f));
+            // transform_translate(spheres[i].transform, glm::vec3(0.f, .01f*std::sin((float)glfwGetTime() + .1f*(spheres[i].transform.pos.x+spheres[i].transform.pos.z)), 0.f));
+            // transform_rotate(spheres[i].transform, glm::vec3(0.f, 0.01f, 0.f));
             game_object_draw(spheres[i], uid_mat, vp, camera.eye);
         }
         glm::vec3 mouseRGB(0.f);

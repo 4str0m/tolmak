@@ -64,10 +64,34 @@ inline void material_use(
     const glm::vec3& eye
 )
 {
+    uint32_t ui = 0;
     shader_bind(material.shader_id);
-    shader_set_uniform_mat4(material.shader_id, "MVP", mvp);
-    shader_set_uniform_mat4(material.shader_id, "M", model);
-    shader_set_uniform_3f(material.shader_id, "EYE", eye);
+    shader_set_uniform_mat4(material.shader_id, material.uniform_locations[ui++], mvp);
+    shader_set_uniform_mat4(material.shader_id, material.uniform_locations[ui++], model);
+    shader_set_uniform_3f(material.shader_id, material.uniform_locations[ui++], eye);
+
+    for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
+        shader_set_uniform_3f(material.shader_id, material.uniform_locations[ui++], point_lights[i].pos);
+        shader_set_uniform_3f(material.shader_id, material.uniform_locations[ui++], point_lights[i].color);
+    })";
+
+
+const char* use_material_sampler_fmt = R"(
+    shader_set_uniform_1i(material.shader_id, material.uniform_locations[ui++], %d);
+    texture_bind(material.%s, %d);)";
+
+const char* use_material_variable_fmt = R"(
+    shader_set_uniform_%s(material.shader_id, material.uniform_locations[ui++], material.%s);)";
+
+const char* material_create_fmt = R"(
+inline void material_create(%s& material)
+{
+    shader_load(&material.shader_id, "%s");
+
+    shader_bind(material.shader_id);
+    material.uniform_locations.append(shader_find_uniform_location(material.shader_id, "MVP"));
+    material.uniform_locations.append(shader_find_uniform_location(material.shader_id, "M"));
+    material.uniform_locations.append(shader_find_uniform_location(material.shader_id, "EYE"));
 
     const char* point_light_pos_fmt = "point_lights[%%u].pos";
     const char* point_light_col_fmt = "point_lights[%%u].color";
@@ -76,27 +100,18 @@ inline void material_use(
     for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
         snprintf(point_light_pos, 256, point_light_pos_fmt, i);
         snprintf(point_light_col, 256, point_light_col_fmt, i);
-        shader_set_uniform_3f(material.shader_id, point_light_pos, point_lights[i].pos);
-        shader_set_uniform_3f(material.shader_id, point_light_col, point_lights[i].color);
+        material.uniform_locations.append(shader_find_uniform_location(material.shader_id, point_light_pos));
+        material.uniform_locations.append(shader_find_uniform_location(material.shader_id, point_light_col));
     })";
 
-const char* use_material_sampler_fmt = R"(
-    shader_set_uniform_1i(material.shader_id, "%s", %d);
-    texture_bind(material.%s, %d);)";
-
-const char* use_material_variable_fmt = R"(
-    shader_set_uniform_%s(material.shader_id, "%s", material.%s);)";
-
-const char* material_create_fmt = R"(
-inline void material_create(%s& material)
-{
-    shader_load(&material.shader_id, "%s");
-}
-)";
+const char* material_create_variable_fmt = R"(
+    material.uniform_locations.append(shader_find_uniform_location(material.shader_id, "%s"));)";
 
 const char* struct_fmt = R"(
 struct %s {
-    uint32_t shader_id;)";
+    uint32_t shader_id;
+    Array<int> uniform_locations;
+    )";
     
 const char* struct_field_fmt = R"(
     %s %s%s;)";
@@ -324,13 +339,14 @@ inline void parse_shader(const char* shader_file_path)
                 else
                     fprintf(outputs[STRUCT], struct_field_fmt, uniform_template.cpp_type, variable_name, uniform_template.cpp_default_value);
 
+                fprintf(outputs[CREATE_MATERIAL], material_create_variable_fmt, variable_name);
                 if (i == SAMPLER2D) {
-                    fprintf(outputs[USE_MATERIAL], use_material_sampler_fmt, variable_name, texture_id, variable_name, texture_id);
+                    fprintf(outputs[USE_MATERIAL], use_material_sampler_fmt, texture_id, variable_name, texture_id);
                     fprintf(outputs[IMGUI], imgui_sampler_fmt, variable_name, variable_name);
                     texture_id++;
                 }
                 else {
-                    fprintf(outputs[USE_MATERIAL], use_material_variable_fmt, uniform_template.opengl_function_postfix, variable_name, variable_name);
+                    fprintf(outputs[USE_MATERIAL], use_material_variable_fmt, uniform_template.opengl_function_postfix, variable_name);
     
                     if (uniform_template.imgui_function && !(has_custom_param && custom_param.type == UniformCustomParameter::Type::HIDE)) {
                         if (i == INT) {
@@ -380,6 +396,7 @@ inline void parse_shader(const char* shader_file_path)
     fprintf(outputs[IMGUI], "\n    ImGui::End();\n}\n");
     fprintf(outputs[STRUCT], "\n};\n");
     fprintf(outputs[USE_MATERIAL], "\n}\n");
+    fprintf(outputs[CREATE_MATERIAL], "\n}\n");
 
     for (int i = 0; i < CODE_ELEMENTS_COUNT; ++i)
     {

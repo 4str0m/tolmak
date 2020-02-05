@@ -34,7 +34,7 @@ struct BucketAllocator
         m_buckets_occupation.append(1);
         m_buckets.append(new Bucket());
         Bucket& bucket = m_buckets[m_buckets.size()-1];
-        memset(bucket.used, 0, sizeof(bool) * N)
+        memset(bucket.used, 0, sizeof(bool) * N);
         bucket.used[0] = true;
         return bucket.elements[0];
     }
