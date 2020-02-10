@@ -12,3 +12,4 @@ build.ninja
 rules.ninja
 Makefile
 .vscode/
+*.arc
