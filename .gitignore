@@ -13,3 +13,5 @@ rules.ninja
 Makefile
 .vscode/
 *.arc
+
+materials.h
