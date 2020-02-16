@@ -39,9 +39,9 @@ void obj_load(MeshData& mesh, const char *file_path) {
         LOG(ERROR, "invalid file path: \"%s\".", file_path);
     }
 
-    Array<glm::vec3>   positions;
-    Array<glm::vec2>   texcoords;
-    Array<glm::vec3>   normals;
+    Array<glm::vec3>  positions;
+    Array<glm::vec2>  texcoords;
+    Array<glm::vec3>  normals;
     Array<uint32_t>   indices;
     Array<obj_vertex> vertices;
     VertexMap vertexMap;
@@ -63,17 +63,17 @@ void obj_load(MeshData& mesh, const char *file_path) {
             glm::vec3 p;
             if (sscanf(rest, "%f %f %f", &p.x, &p.y, &p.z) != 3)
                 LOG(ERROR, "invalid vertex position: \"%s\" [%s:%d].", line_bk, file_path, line_number);
-            positions.append(p);
+            positions.push_back(p);
         } else if (!strncmp(prefix, "vt", prefix_length)) {
             glm::vec2 tc;
             if (sscanf(rest, "%f %f", &tc.x, &tc.y) != 2)
                 LOG(ERROR, "invalid texture coordinate: \"%s\" [%s:%d].", line_bk, file_path, line_number);
-            texcoords.append(tc);
+            texcoords.push_back(tc);
         } else if (!strncmp(prefix, "vn", prefix_length)) {
             glm::vec3 n;
             if (sscanf(rest, "%f %f %f", &n.x, &n.y, &n.z) != 3)
                 LOG(ERROR, "invalid vertex normal: \"%s\" [%s:%d].", line_bk, file_path, line_number);
-            normals.append(n);
+            normals.push_back(n);
         } else if (!strncmp(prefix, "f", prefix_length)) {
             char v1[64], v2[64], v3[64], v4[64];
             int count = 0;
@@ -100,10 +100,10 @@ void obj_load(MeshData& mesh, const char *file_path) {
                 VertexMap::const_iterator it = vertexMap.find(v);
                 if (it == vertexMap.end()) {
                     vertexMap[v] = (uint32_t) vertices.size();
-                    indices.append((uint32_t) vertices.size());
-                    vertices.append(v);
+                    indices.push_back((uint32_t) vertices.size());
+                    vertices.push_back(v);
                 } else {
-                    indices.append(it->second);
+                    indices.push_back(it->second);
                 }
             }
         }

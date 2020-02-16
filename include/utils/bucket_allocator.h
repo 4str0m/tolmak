@@ -31,8 +31,8 @@ struct BucketAllocator
         }
 
         // if we reach this point, it means that all buckets were full
-        m_buckets_occupation.append(1);
-        m_buckets.append(new Bucket());
+        m_buckets_occupation.push_back(1);
+        m_buckets.push_back(new Bucket());
         Bucket& bucket = m_buckets[m_buckets.size()-1];
         memset(bucket.used, 0, sizeof(bool) * N);
         bucket.used[0] = true;

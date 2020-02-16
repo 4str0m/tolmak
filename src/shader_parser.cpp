@@ -89,9 +89,9 @@ inline void material_create(%s& material)
     shader_load(&material.shader_id, "%s");
 
     shader_bind(material.shader_id);
-    material.uniform_locations.append(shader_find_uniform_location(material.shader_id, "MVP"));
-    material.uniform_locations.append(shader_find_uniform_location(material.shader_id, "M"));
-    material.uniform_locations.append(shader_find_uniform_location(material.shader_id, "EYE"));
+    material.uniform_locations.push_back(shader_find_uniform_location(material.shader_id, "MVP"));
+    material.uniform_locations.push_back(shader_find_uniform_location(material.shader_id, "M"));
+    material.uniform_locations.push_back(shader_find_uniform_location(material.shader_id, "EYE"));
 
     const char* point_light_pos_fmt = "point_lights[%%u].pos";
     const char* point_light_col_fmt = "point_lights[%%u].color";
@@ -100,12 +100,12 @@ inline void material_create(%s& material)
     for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
         snprintf(point_light_pos, 256, point_light_pos_fmt, i);
         snprintf(point_light_col, 256, point_light_col_fmt, i);
-        material.uniform_locations.append(shader_find_uniform_location(material.shader_id, point_light_pos));
-        material.uniform_locations.append(shader_find_uniform_location(material.shader_id, point_light_col));
+        material.uniform_locations.push_back(shader_find_uniform_location(material.shader_id, point_light_pos));
+        material.uniform_locations.push_back(shader_find_uniform_location(material.shader_id, point_light_col));
     })";
 
 const char* material_create_variable_fmt = R"(
-    material.uniform_locations.append(shader_find_uniform_location(material.shader_id, "%s"));)";
+    material.uniform_locations.push_back(shader_find_uniform_location(material.shader_id, "%s"));)";
 
 const char* struct_fmt = R"(
 struct %s {

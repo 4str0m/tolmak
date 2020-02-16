@@ -22,19 +22,19 @@ struct Array
     inline const T& operator[](int i) const
     {
 #if ARRAY_BOUND_CHECK == 1
-        ASSERT(i >= 0 && i < m_size, "array index out of bounds (%d not in [0, %u]).", i, m_size);
+        ASSERT(i >= 0 && (uint32_t)i < m_size, "array index out of bounds (%d not in [0, %u]).", i, m_size);
 #endif
         return m_data[i];
     }
     inline T& operator[](int i)
     {
 #if ARRAY_BOUND_CHECK == 1
-        ASSERT(i >= 0 && i < m_size, "array index out of bounds (%d not in [0, %u]).", i, m_size);
+        ASSERT(i >= 0 && (uint32_t)i < m_size, "array index out of bounds (%d not in [0, %u]).", i, m_size);
 #endif
         return m_data[i];
     }
 
-    inline void append(const T& t)
+    inline void push_back(const T& t)
     {
         if (m_size >= m_allocated)
             reserve(m_allocated<<1);
@@ -50,6 +50,8 @@ struct Array
             LOG(ERROR, "not able to reserve %u elements for array.", size);
         m_data = new_data;
         m_allocated = size;
+        if (m_allocated < m_size)
+            m_size = m_allocated;
     }
 
     inline void resize(uint32_t size)
