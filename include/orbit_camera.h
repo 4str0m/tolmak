@@ -26,13 +26,13 @@ struct Camera
 
 inline void camera_handle_scroll(Camera& camera, double xoffset, double yoffset)
 {
+    float fact = yoffset < 0 ? 1.1 : 0.909;
     if (camera.free_flying) {
-        camera.fov *= yoffset < 0 ? 1.1 : 0.909;
+        camera.fov *= fact;
     } else {
-        float fact = yoffset < 0 ? 1.1 : 0.909;
+        glm::vec3 target = camera.eye + camera.forward * camera.distance_to_target;
         camera.distance_to_target *= fact;
-        camera.eye += camera.forward * camera.distance_to_target * (1 - fact);
-        camera.must_recompute = true;
+        camera.eye = target - camera.forward * camera.distance_to_target;
     }
 }
 
