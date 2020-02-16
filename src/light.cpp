@@ -22,9 +22,6 @@ void lights_init()
     vertex_attribs_append(attribs, 3, GL_FLOAT);
     vertex_attribs_append(attribs, 3, GL_FLOAT);
     vertex_attribs_enable_all(attribs, light_mesh);
-
-    point_lights[0].color = glm::vec3(1.f, 1.f, .9f);
-    point_lights[1].color = glm::vec3(.9f, 1.f, 1.f);
 }
 void lights_draw(const glm::mat4& vp)
 {
