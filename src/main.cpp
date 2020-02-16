@@ -118,19 +118,19 @@ int main(void)
     PlainColorMaterial uid_mat;
     material_create(uid_mat);
 
-    const uint32_t sphere_count = 100;
+    const uint32_t sphere_count = 4;
     GameObject spheres[sphere_count];
     glm::vec3 uid_colors[sphere_count];
     float outline_size = .05f;
     for (uint32_t i = 0; i < sphere_count; ++i)
     {
-        game_object_create(spheres[i], "../resources/meshes/cube.obj");
+        game_object_create(spheres[i], "../resources/meshes/sphere.obj");
         uid_colors[i] = glm::vec3(
             spheres[i].uid / 256.f,
             (spheres[i].uid >> 8) / 256.f,
             (spheres[i].uid >> 16) / 256.f
         );
-        transform_translate(spheres[i].transform, glm::vec3(i%10 - 5.f, 0, i/10 - 5.f) * 3.f);
+        transform_translate(spheres[i].transform, glm::vec3(i%2 - .5f, 0, i/2 - .5f) * 3.f);
     }
 
     FrameBufferObject fbo;
@@ -142,6 +142,17 @@ int main(void)
     // Our state
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
+    point_lights[0].color = glm::vec3(1.f, 1.f, .9f);
+    point_lights[1].color = glm::vec3(.9f, 1.f, 1.f);
+    point_lights[2].color = glm::vec3(1.f, .9f, 1.f);
+    point_lights[3].color = glm::vec3(1.f, 1.f, 1.f);
+
+    point_lights[0].intensity = 5.f;
+    point_lights[1].intensity = 5.f;
+    point_lights[2].intensity = 5.f;
+    point_lights[3].intensity = 5.f;
+
+    float h = 3.f;
     while (!glfwWindowShouldClose(window))
     {
         camera_update(camera);
@@ -151,10 +162,12 @@ int main(void)
         glfwGetFramebufferSize(window, &width, &height);
         aspect_ratio = width / (float) height;
  
-        float time = (float)0.f; //glfwGetTime();
-        float r = 3.f;
-        point_lights[0].pos = glm::vec3(r * sin(time), 0.f, r * cos(time));
-        point_lights[1].pos = glm::vec3(r * sin(time + PI), 0.f, r * cos(time + PI));
+        float time = (float)glfwGetTime() * .1f;
+        float r = 6.f;
+        point_lights[0].pos = glm::vec3(r * sin(time),          h, r * cos(time));
+        point_lights[1].pos = glm::vec3(r * sin(time + PI*.5),  h, r * cos(time + PI*.5));
+        point_lights[2].pos = glm::vec3(r * sin(time + PI),     h, r * cos(time + PI));
+        point_lights[3].pos = glm::vec3(r * sin(time + PI*1.5), h, r * cos(time + PI*1.5));
 
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
@@ -171,6 +184,7 @@ int main(void)
             static int light_index = 0;
             ImGui::SliderInt("Light index", &light_index, 0, N_POINT_LIGHTS);
             ImGui::SliderFloat3("Light pos", (float*)&point_lights[light_index].pos, -10.f, 10.f);
+            ImGui::SliderFloat("Light height", (float*)&h, -10.f, 10.f);
             ImGui::ColorEdit3("Light color", (float*)&point_lights[light_index].color);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
