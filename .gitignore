@@ -14,4 +14,4 @@ Makefile
 .vscode/
 *.arc
 
-materials.h
+include/materials.h
