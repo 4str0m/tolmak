@@ -73,6 +73,7 @@ inline void material_use(
     for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
         shader_set_uniform_3f(material.shader_id, material.uniform_locations[ui++], point_lights[i].pos);
         shader_set_uniform_3f(material.shader_id, material.uniform_locations[ui++], point_lights[i].color);
+        shader_set_uniform_1f(material.shader_id, material.uniform_locations[ui++], point_lights[i].intensity);
     })";
 
 
@@ -95,13 +96,17 @@ inline void material_create(%s& material)
 
     const char* point_light_pos_fmt = "point_lights[%%u].pos";
     const char* point_light_col_fmt = "point_lights[%%u].color";
+    const char* point_light_intensity_fmt = "point_lights[%%u].intensity";
     char point_light_pos[256];
     char point_light_col[256];
+    char point_light_intensity[256];
     for(uint32_t i = 0; i < N_POINT_LIGHTS; ++i) {
         snprintf(point_light_pos, 256, point_light_pos_fmt, i);
         snprintf(point_light_col, 256, point_light_col_fmt, i);
+        snprintf(point_light_intensity, 256, point_light_intensity_fmt, i);
         material.uniform_locations.push_back(shader_find_uniform_location(material.shader_id, point_light_pos));
         material.uniform_locations.push_back(shader_find_uniform_location(material.shader_id, point_light_col));
+        material.uniform_locations.push_back(shader_find_uniform_location(material.shader_id, point_light_intensity));
     })";
 
 const char* material_create_variable_fmt = R"(

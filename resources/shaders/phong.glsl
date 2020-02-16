@@ -34,6 +34,7 @@ void main()
     for(int i = 0; i < N_POINT_LIGHTS; ++i) {
         tangent_point_lights[i].pos = TBN * point_lights[i].pos;
         tangent_point_lights[i].color = point_lights[i].color;
+        tangent_point_lights[i].intensity = point_lights[i].intensity;
     }
     tangent_camera_pos = TBN * EYE;
     tangent_position = TBN * position;
@@ -65,14 +66,16 @@ uniform float bump_strength;
 
 vec3 point_light(PointLight point_light, vec3 normal, vec3 object_color, float object_specular)
 {
-    vec3 pos_to_light = normalize(point_light.pos - tangent_position);
+    vec3 pos_to_light = point_light.pos - tangent_position;
+    float dist_to_light = length(pos_to_light);
+    pos_to_light = normalize(pos_to_light);
     float diff = max(dot(pos_to_light, normal), 0.0f);
     vec3 diffuse = diff * object_color * point_light.color * tint;
 
     vec3 pos_to_camera = normalize(tangent_camera_pos - tangent_position);
     float spec = clamp(dot(reflect(-pos_to_light, normal), pos_to_camera), 0.0f, 1.0f);
     vec3 specular = specularity * object_specular * pow(spec, 20.0f) * point_light.color;
-    return diffuse + specular;
+    return (diffuse + specular) * point_light.intensity / dist_to_light;
 }
 
 void main()

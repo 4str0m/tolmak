@@ -7,7 +7,7 @@ Array<Shader> shaders;
 static const char* common_uniforms = R"(
 #version 460
 
-#define N_POINT_LIGHTS 10u
+#define N_POINT_LIGHTS 5u
 
 uniform mat4 MVP;
 uniform mat4 M;
@@ -16,6 +16,7 @@ uniform vec3 EYE;
 struct PointLight {
     vec3 pos;
     vec3 color;
+    float intensity;
 };
 uniform PointLight point_lights[N_POINT_LIGHTS];
 )";
