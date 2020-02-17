@@ -39,6 +39,14 @@ void mesh_create(uint32_t *mesh_id, const char *file_path)
 
     meshes.push_back(mesh);
     *mesh_id = meshes.size()-1;
+
+    VertexAttribs attribs;
+    vertex_attribs_append(attribs, 3, GL_FLOAT);
+    vertex_attribs_append(attribs, 2, GL_FLOAT);
+    vertex_attribs_append(attribs, 3, GL_FLOAT);
+    vertex_attribs_append(attribs, 3, GL_FLOAT);
+    vertex_attribs_append(attribs, 3, GL_FLOAT);
+    vertex_attribs_enable_all(attribs, *mesh_id);
 }
 
 void mesh_draw(uint32_t mesh_id)

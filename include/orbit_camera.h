@@ -10,8 +10,8 @@ struct Camera
 
     float fov           = glm::radians(45.f);
     float aspect_ratio  = 0.f;
-    float near          = 0.1f;
-    float far           = 100.f;
+    float near          = 0.5f;
+    float far           = 500.f;
 
     bool must_recompute = true;
     glm::vec3 eye       = glm::vec3(0.f, 0.f, -10.f);

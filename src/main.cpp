@@ -118,19 +118,21 @@ int main(void)
     PlainColorMaterial uid_mat;
     material_create(uid_mat);
 
-    const uint32_t sphere_count = 4;
-    GameObject spheres[sphere_count];
+    const uint32_t sphere_count = 900;
+    const uint32_t sqrt_sphere_count = 30;
+    uint32_t spheres[sphere_count];
     glm::vec3 uid_colors[sphere_count];
     float outline_size = .05f;
     for (uint32_t i = 0; i < sphere_count; ++i)
     {
-        game_object_create(spheres[i], "../resources/meshes/sphere.obj");
+        spheres[i] = game_object_create("../resources/meshes/sphere.obj");
         uid_colors[i] = glm::vec3(
-            spheres[i].uid / 256.f,
-            (spheres[i].uid >> 8) / 256.f,
-            (spheres[i].uid >> 16) / 256.f
+            (spheres[i] & 0xff) / 256.f,
+            ((spheres[i] >> 8) & 0xff) / 256.f,
+            ((spheres[i] >> 16) & 0xff) / 256.f
         );
-        transform_translate(spheres[i].transform, glm::vec3(i%2 - .5f, 0, i/2 - .5f) * 3.f);
+        GameObject* game_object = get_game_object_from_id(spheres[i]);
+        transform_translate(game_object->transform, glm::vec3(i%sqrt_sphere_count - sqrt_sphere_count*.5f, 0, i/sqrt_sphere_count - sqrt_sphere_count*.5f) * 3.f);
     }
 
     FrameBufferObject fbo;
@@ -200,7 +202,7 @@ int main(void)
         glm::mat4 view = get_view_matrix(camera);
         glm::mat4 vp = projection * view;
 
-        frame_buffer_object_bind(fbo);
+        // frame_buffer_object_bind(fbo);
         GLCall(glViewport(0, 0, width, height));
         GLCall(glClearColor(1.f, 1.f, 1.f, 1.f));
         GLCall(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
@@ -237,7 +239,7 @@ int main(void)
                 GLCall(glStencilMask(0xFF));
             else
                 GLCall(glStencilMask(0x00));
-            
+
             game_object_draw(spheres[i], phong, vp, camera.eye);
         }
 
@@ -249,9 +251,12 @@ int main(void)
             glm::vec3 uid = glm::abs(mouseRGB - uid_colors[i]);
             if (uid.x < threshold && uid.y < threshold && uid.z < threshold)
             {
-                transform_scale(spheres[i].transform, glm::vec3(1.f + outline_size));
+                GameObject* game_object = get_game_object_from_id(spheres[i]);
+                if (!game_object)
+                    continue;
+                transform_scale(game_object->transform, glm::vec3(1.f + outline_size));
                 game_object_draw(spheres[i], plain_color, vp, camera.eye);
-                transform_scale(spheres[i].transform, glm::vec3(1.f / (1.f + outline_size)));
+                transform_scale(game_object->transform, glm::vec3(1.f / (1.f + outline_size)));
             }
         }
 

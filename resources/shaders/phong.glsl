@@ -94,5 +94,9 @@ void main()
     for(unsigned int i = 0; i < N_POINT_LIGHTS; ++i)
         color += point_light(tangent_point_lights[i], normal, object_color, object_specular);
 
+    if (any(isnan(color)))
+        color = vec3(1, 0, 1);
+    else if (any(isinf(color)))
+        color = vec3(0, 1, 1);
     output_color = vec4(color, 1.0);
 };

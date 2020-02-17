@@ -109,6 +109,7 @@ add_executable(tolmak
   include/light.h             src/light.cpp
   include/mesh.h              src/mesh.cpp
   include/game_object.h       src/game_object.cpp
+  include/components.h        src/components.cpp
   include/common.h            src/common.cpp
   include/utils/log.h         src/utils/log.cpp
 
@@ -119,6 +120,7 @@ add_executable(tolmak
   include/orbit_camera.h
   include/materials.h
   include/frame_buffer.h
+
 
   ext/glad/src/glad.c
   ${imgui_SRC}
