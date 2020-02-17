@@ -18,6 +18,10 @@ struct Array
         m_size = m_allocated = 0;
     }
 
+    Array(const Array&) = delete;
+    Array(Array&&) = delete;
+    Array& operator=(const Array&) = delete;
+    Array& operator=(Array&&) = delete;
 
     inline const T& operator[](int i) const
     {
